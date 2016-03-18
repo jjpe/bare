@@ -1,0 +1,10 @@
+[package]
+name = "bare-rs"
+version = "0.1.0"
+authors = ["Joey Ezechiëls <joey.ezechiels@gmail.com>"]
+
+[dependencies]
+
+# argparse = "0.2.1"
+# docopt = "0.6.78"
+# rustc-serialize = "0.3"  # if you're using `derive(RustcDecodable)`
