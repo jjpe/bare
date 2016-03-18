@@ -33,19 +33,18 @@ mod cli {
             }
         }
 
-        fn parse_files(&mut self) -> &mut Args {
-            let args : Vec<String> = env::args()
+        fn parse_files(mut self) -> Self {
+            self.files = env::args()
                 .skip_while(|arg| {
                     !vec!["-f", "--files"].contains(&arg.as_str())
                 })
                 .skip(1)
                 .take_while(|arg| !arg.starts_with("-"))
                 .collect();
-            self.files = args;
             self
         }
 
-        fn parse_pattern(&mut self) -> &mut Args {
+        fn parse_pattern(mut self) -> Self {
             let args : Vec<String> = env::args()
                 .skip_while(|arg| {
                     !vec!["-p", "--pattern"].contains(&arg.as_str())
@@ -53,16 +52,15 @@ mod cli {
                 .skip(1)
                 .take(2)
                 .collect();
-            self.pattern = args[0].clone();
+            self.pattern =     args[0].clone();
             self.replacement = args[1].clone();
             self
         }
 
         pub fn parse() -> Args {
-            let mut args  = Args::new();
-            args.parse_files()
-                .parse_pattern();
-            args
+            Args::new()
+                .parse_files()
+                .parse_pattern()
         }
     }
 }
