@@ -46,8 +46,8 @@ pub mod cli {
     use exit::ExitCode::*;
     use ::Pattern;
 
-    fn name_regex(name: &str, regex: &str) -> Regex {
-        let raw = format!("(?P<{}>{})", name, regex);
+    fn name_regex(name: &str, regex: &Regex) -> Regex {
+        let raw = format!("(?P<{}>{})", name, &regex);
         Regex::new(&raw).unwrap()
     }
 
@@ -109,7 +109,8 @@ pub mod cli {
                     }
                     // Call every regex "regex" for easy reference. Since
                     // they're used successively, the names won't clash.
-                    let regex = name_regex("regex", raw_patterns[idx]);
+                    let regex = Regex::new(raw_patterns[idx]).unwrap();
+                    let regex = name_regex("regex", &regex);
                     patterns.push( (regex, raw_patterns[idx + 1].clone()) );
                 }
                 patterns
