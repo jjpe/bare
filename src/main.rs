@@ -47,7 +47,7 @@ pub mod cli {
     use ::Pattern;
 
     fn name_regex(name: &str, regex: &str) -> Regex {
-        let raw = format!("(?P<{}>", name) + regex + ")";
+        let raw = format!("(?P<{}>{})", name, regex);
         Regex::new(&raw).unwrap()
     }
 
