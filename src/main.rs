@@ -169,77 +169,38 @@ Options:
 /// This module provides the core functionality from the binary in library form.
 pub mod bare {
     use regex::Regex;
-    use std::collections::HashMap;
-    use std::path::{Path};
+    use std::path::{Path,PathBuf};
     use ::Pattern;
 
-    #[derive(Debug)]
-    pub struct RenameJob<'a> {
-        mappings: HashMap<&'a Path, String>,
+    pub struct RenameProposal {
+        pub renames: Vec<(PathBuf, PathBuf)>,
+        pub not_found: Vec<String>
     }
 
-    impl<'a> RenameJob<'a> {
-        pub fn new() -> Self {
-            RenameJob {  mappings: HashMap::new()  }
-        }
-
-        /// Specify which file paths to rename.
-        pub fn on_files(mut self, paths: Vec<&'a Path>) -> Self {
-            // FIXME: ATM, this fn must be called BEFORE using_patterns(),
-            //        since otherwise using_patterns() won't see the paths
-            //        specified here.
-            //        The actual order in which they're specified, or how
-            //        many times each fn is called, should not matter.
-            for path in paths {
-                if !self.mappings.contains_key(path) {
-                    self.mappings.insert(path, String::new());
+    pub fn propose_renames(paths: &[&Path],
+                           patterns: &[Pattern]) -> RenameProposal {
+        let mut renames: Vec<(PathBuf, PathBuf)> = vec![];
+        let mut not_found: Vec<String> = vec![];
+        for src_path in paths.iter() {
+            let parent: &Path = src_path.parent().unwrap();
+            let src_name: &str =
+                src_path.file_name().unwrap().to_str().unwrap();
+            if !src_path.exists() {
+                not_found.push(String::from(src_path.to_str().unwrap()));
+                continue
+            }
+            let mut dst_name = String::from(src_name);
+            for pat in patterns.iter() {
+                let (regex, replacement): (&Regex, &str) = (&pat.0, &pat.1);
+                if regex.is_match(&dst_name) {
+                    dst_name = regex.replace(&dst_name, replacement);
                 }
             }
-            self
+            let dst_path = Path::new(parent.to_str().unwrap())
+                .join(Path::new(&dst_name));
+            renames.push((src_path.to_path_buf(), dst_path));
         }
-
-        /// Specify which patterns to use. A pattern is a (Regex, String) tuple.
-        /// When the regex matches a file path, the match is substituted for the
-        /// replacement String (i.e. the right tuple element).
-        pub fn using_patterns(mut self,
-                              patterns: Vec<(Regex, String)>) -> Self {
-            for (regex, replacement) in patterns {
-                self = self.update_pattern(&regex, replacement);
-            }
-            self
-        }
-
-        fn update_pattern(mut self,
-                          regex: &Regex,
-                          replacement: String) -> Self {
-            for (src, dst) in self.mappings.iter_mut() {
-                let src_name = src.file_name().unwrap().to_str().unwrap();
-                if *dst == "" && regex.is_match(src_name) {
-                    *dst = regex.replace(src_name, &*replacement);
-                } else if regex.is_match(dst) {
-                    *dst = regex.replace(dst, &*replacement);
-                }
-            }
-            self
-        }
-
-        /// Dump the state to standard out. Intended as a debugging tool.
-        pub fn dump(self) -> Self {
-            println!("mappings:");
-            for (src, dst) in self.mappings.iter() {
-                println!("    {:?}  =>  {:?}", src, dst);
-            }
-            self
-        }
-
-        /// Apply the changes. If this fn completes successfully, any
-        /// matching files have been renamed.
-        pub fn apply(self) -> Self {
-            // TODO: Change the return value to signal success or failure.
-            println!("Applying shit etc.");
-            // TODO: perform renamings
-            self
-        }
+        RenameProposal { renames: renames, not_found: not_found }
     }
 }
 
