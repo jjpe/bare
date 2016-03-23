@@ -8,31 +8,23 @@ pub mod exit {
     use std::process;
 
     /// Exit codes for the program.
-    pub enum ExitCodes {
+    pub enum ExitCode {
         /// The program exited normally.
-        Ok = 0,
+        Ok =               0,
         /// The pattern is malformed.
         MalformedPattern = 2,
         /// Not enough files were specified.
-        NotEnoughFiles = 4,
+        NotEnoughFiles =   4,
     }
 
     /// Abnormally exit the program. The `exit_code` value specifies the reason.
-    pub fn abort(exit_code : ExitCodes) {
-        exit(exit_code);
+    pub fn abort(exit_code : ExitCode) {
+        process::exit(exit_code as i32);
     }
 
     /// Normally exit the program.
     pub fn quit() {
-        exit(ExitCodes::Ok);
-    }
-
-    fn exit(exit_code: ExitCodes) {
-        process::exit(match exit_code {
-            ExitCodes::Ok =>                 0,
-            ExitCodes::MalformedPattern =>   2,
-            ExitCodes::NotEnoughFiles =>     4,
-        });
+        process::exit(ExitCode::Ok as i32);
     }
 }
 
