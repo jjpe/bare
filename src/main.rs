@@ -46,6 +46,11 @@ pub mod cli {
     use exit::ExitCode::*;
     use ::Pattern;
 
+    fn name_regex(name: &str, regex: &str) -> Regex {
+        let raw = format!("(?P<{}>", name) + regex + ")";
+        Regex::new(&raw).unwrap()
+    }
+
     #[derive(Debug)]
     pub struct Args<'a> {
         pub file_paths:   Vec<&'a Path>,
@@ -104,11 +109,8 @@ pub mod cli {
                     }
                     // Call every regex "regex" for easy reference. Since
                     // they're used successively, the names won't clash.
-                    let mut raw = String::from("(?P<regex>");
-                    raw = raw + raw_patterns[idx];
-                    raw.push_str(")");
-                    patterns.push( (Regex::new(&*raw).unwrap(),
-                                    raw_patterns[idx + 1].clone()) );
+                    let regex = name_regex("regex", raw_patterns[idx]);
+                    patterns.push( (regex, raw_patterns[idx + 1].clone()) );
                 }
                 patterns
             };
