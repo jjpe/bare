@@ -230,7 +230,7 @@ fn main() {
         "y"|"yes" => {
             println!("Ju Li! Do the thing!");
         },
-        DEFAULT|"n"|"no" => println!("[INFO] Aborted renaming files."),
+        "n"|"no"|DEFAULT => println!("[INFO] Aborted renaming files."),
         ans => println!("[WARN] Don't know what to do with answer {:?}", ans),
     }
 
