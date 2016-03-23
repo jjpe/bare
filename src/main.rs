@@ -39,9 +39,11 @@ pub mod exit {
 pub mod cli {
     use regex::Regex;
     use std::env;
+    use std::io;
+    use std::io::{Write};
     use std::path::Path;
     use exit;
-    use exit::ExitCodes::{MalformedPattern /* , NotEnoughFiles */ };
+    use exit::ExitCode::*;
     use ::Pattern;
 
     #[derive(Debug)]
@@ -149,16 +151,17 @@ Options:
                    and 1 REP is required.");
     }
 
-    /// Print a 'file not found' warning message for each
-    /// file path in `files` that does not exist.
-    pub fn print_nonexisting_files(files : &Vec<String>) {
-        let nonexisting_files : Vec<&Path> = files.iter()
-            .map(|name| Path::new(name.as_str()))
-            .filter(|path| !path.exists())
-            .collect();
-        for nef in nonexisting_files.iter() {
-            println!("[WARN] file not found: {:?}", nef);
+    pub fn get_user_input(question: &str, validator: &Regex) -> String {
+        let mut answer_buf = String::new();
+        while !validator.is_match(&answer_buf) {
+            print!("{}", question);
+            io::stdout().flush().unwrap_or_else(
+                |e| println!("Error flushing stdout: {:?}", e));
+            answer_buf.clear();
+            io::stdin().read_line(&mut answer_buf)
+                .expect("Failed to read input");
         }
+        answer_buf
     }
 }
 
