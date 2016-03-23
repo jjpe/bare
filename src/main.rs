@@ -221,7 +221,6 @@ fn main() {
     }
     for (src, dst) in proposal.renames {
         println!("[INFO] {:?}    =>    {:?}", src, dst);
-        println!("[INFO] {:?}    =>    {:?}", src, dst);
     }
 
     const DEFAULT: &'static str = "";
