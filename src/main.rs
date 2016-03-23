@@ -3,6 +3,10 @@
 // Copyright @ 2016 Joey Ezechiels
 extern crate regex;
 
+use regex::Regex;
+
+pub type Pattern = (Regex, String);
+
 /// This module deals with exiting the program.
 pub mod exit {
     use std::process;
@@ -38,11 +42,12 @@ pub mod cli {
     use std::path::Path;
     use exit;
     use exit::ExitCodes::{MalformedPattern /* , NotEnoughFiles */ };
+    use ::Pattern;
 
     #[derive(Debug)]
     pub struct Args<'a> {
         pub file_paths:   Vec<&'a Path>,
-        pub patterns:     Vec<(Regex, String)>,
+        pub patterns:     Vec<Pattern>,
         pub print_help:   bool,
         pub dry_run:      bool,
     }
@@ -163,6 +168,7 @@ pub mod bare {
     use regex::Regex;
     use std::collections::HashMap;
     use std::path::{Path};
+    use ::Pattern;
 
     #[derive(Debug)]
     pub struct RenameJob<'a> {
