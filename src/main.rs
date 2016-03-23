@@ -209,18 +209,33 @@ pub mod bare {
 fn main() {
     let raw_args = std::env::args().collect();
     let args = cli::Args::parse(&raw_args);
-    println!("args = {:?}", args); // TODO:
 
     if args.print_help {
         cli::print_usage();
         exit::quit();
     }
 
-    bare::RenameJob::new()
-        .on_files(args.file_paths)
-        .using_patterns(args.patterns)
-        .dump()
-        .apply();
+    let proposal = bare::propose_renames(&args.file_paths, &args.patterns);
+    for file in proposal.not_found.iter() {
+        println!("[WARN] Not found, skipping {:?}", file);
+    }
+    for (src, dst) in proposal.renames {
+        println!("[INFO] {:?}    =>    {:?}", src, dst);
+        println!("[INFO] {:?}    =>    {:?}", src, dst);
+    }
+
+    const DEFAULT: &'static str = "";
+    let re = Regex::new(r"^(?i)(y|n|yes|no)?\n$").unwrap();
+    let answer = cli::get_user_input("[INFO] Accord the changes? [y/N] ", &re);
+    match answer.to_lowercase().trim() {
+        "y"|"yes" => {
+            println!("Ju Li! Do the thing!");
+        },
+        DEFAULT|"n"|"no" => println!("[INFO] Aborted renaming files."),
+        ans => println!("[WARN] Don't know what to do with answer {:?}", ans),
+    }
 
     exit::quit();
 }
+
+//  LocalWords:  filename PathBuf ExitCode
