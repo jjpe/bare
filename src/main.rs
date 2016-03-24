@@ -14,12 +14,10 @@ pub mod exit {
 
     /// Exit codes for the program.
     pub enum ExitCode {
-        /// The program exited normally.
-        Ok =               0,
-        /// The pattern is malformed.
-        MalformedPattern = 2,
-        /// Not enough files were specified.
-        NotEnoughFiles =   4,
+        Ok =                   0,
+        NotEnoughPatterns =    1,
+        MalformedPattern =     2,
+        NotEnoughFiles =       3,
     }
 
     /// Abnormally exit the program. The `exit_code` value specifies the reason.
