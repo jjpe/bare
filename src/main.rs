@@ -113,9 +113,15 @@ pub mod cli {
         fn parse_patterns(mut self, raw_args: &'a [String]) -> Self {
             let raw_patterns = args_for(raw_args, vec!["-p", "--pattern"]);
             let num_raw_patterns = raw_patterns.len();
-            if num_raw_patterns < 2 || num_raw_patterns % 2 != 0 {
-                let mut log = log::ColoredLog::new();
-                log.error(&format!("Malformed pattern detected in {:?}",
+            let mut log = log::ColoredLog::new();
+            if num_raw_patterns < 2 {
+                log.error(&format!("Not enough patterns specified: {:?}\n",
+                                   raw_patterns));
+                print_usage();
+                exit::abort(NotEnoughPatterns);
+            }
+            if num_raw_patterns % 2 != 0 {
+                log.error(&format!("Malformed pattern detected in {:?}\n",
                                    raw_patterns));
                 print_usage();
                 exit::abort(MalformedPattern);
