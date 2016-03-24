@@ -2,6 +2,7 @@
 //
 // Copyright @ 2016 Joey Ezechiels
 extern crate regex;
+extern crate term;
 
 use regex::Regex;
 
@@ -39,13 +40,15 @@ pub mod exit {
 ///
 /// [`Args`]: ./struct.Args.html
 pub mod cli {
+    use ::log;
+    use ::Pattern;
+    use exit;
+    use exit::ExitCode::*;
     use regex::Regex;
     use std::io;
     use std::io::{Write};
     use std::path::Path;
-    use exit;
-    use exit::ExitCode::*;
-    use ::Pattern;
+    use term::color;
 
     fn name_regex(name: &str, regex: &Regex) -> Regex {
         let raw = format!("(?P<{}>{})", name, &regex);
@@ -113,8 +116,9 @@ pub mod cli {
             let raw_patterns = args_for(raw_args, vec!["-p", "--pattern"]);
             let num_raw_patterns = raw_patterns.len();
             if num_raw_patterns < 2 || num_raw_patterns % 2 != 0 {
-                println!("Error: Malformed pattern detected in {:?}",
-                         raw_patterns);
+                let mut log = log::ColoredLog::new();
+                log.error(&format!("Malformed pattern detected in {:?}",
+                                   raw_patterns));
                 print_usage();
                 exit::abort(MalformedPattern);
             }
@@ -147,42 +151,121 @@ pub mod cli {
 
     /// Print the usage string to stdout.
     pub fn print_usage() {
+        let mut log = log::ColoredLog::new();
         println!("BARE is the BAtch REnaming tool. It works by matching regexes
 against filenames, and applying them in the order they were provided.
 For regex syntax, see https://doc.rust-lang.org/regex/regex/index.html#syntax
-
-Usage:
-  bare [-h | --help]
-       [-d | --dry-run]
-       [-f FILE+ | --files FILE+]
-       [-p [PAT REP]+ | --pattern [PAT REP+]]
-
-Options:
-  -h --help      Show this screen
-  -d --dry-run   Don't actually rename any files
-  -f --files     The files to rename
-  -p --pattern   Matches files against each PAT regex and replaces each
-                   match with the corresponding REP. A minimum of 1 PAT
-                   and 1 REP is required.");
+\n");
+        log.writeln_color("Usage:", color::YELLOW);
+        log.write_color("  bare ", color::GREEN);
+        log.writeln_color("[-h | --help]", color::CYAN);
+        log.writeln_color("       [-d | --dry-run]", color::CYAN);
+        log.writeln_color("       [-f FILE+ | --files FILE+]", color::CYAN);
+        log.writeln_color("       [-p [PAT REP]+ | --pattern [PAT REP+]]",
+                          color::CYAN);
+        log.writeln_color("", color::WHITE);
+        log.writeln_color("Options:", color::YELLOW);
+        log.writeln_color("  -h --help      Show this screen",
+                          color::WHITE);
+        log.writeln_color("  -d --dry-run   Don't actually rename any files",
+                          color::WHITE);
+        log.writeln_color("  -f --files     The files to rename", color::WHITE);
+        let x = String::from("  -p --pattern   Matches files ")
+            + "against each PAT regex and replaces each match\n"
+            + "                   with the corresponding REP. A minimum of\n"
+            + "                   1 PAT and 1 REP is required.";
+        log.writeln_color(&x, color::WHITE);
+        log.writeln_color("  ", color::WHITE);
+        log.writeln_color("  ", color::WHITE);
     }
 
     /// Print a question, then wait for user input.
     /// Keep asking the question while the user input fails validation.
     /// Return the answer upon successful validation.
     pub fn ask_user(question: &str, validator: &Regex) -> String {
+        let mut log = log::ColoredLog::new();
         let mut answer = String::new();
         while !validator.is_match(&answer) {
-            print!("{}", question);
+            log.info(&format!("{}", question));
             io::stdout().flush().unwrap_or_else(
-                |e| println!("Error flushing stdout: {:?}", e));
+                |e| log.error(&format!("Error flushing stdout: {:?}", e)) );
             answer.clear();
-            io::stdin().read_line(&mut answer)
-                .expect("Failed to read input");
+            io::stdin().read_line(&mut answer).expect("Failed to read input");
         }
         answer
     }
 }
 
+mod log {
+    use std::io;
+    use term;
+    use term::StdoutTerminal;
+    use term::color;
+    use term::color::Color;
+
+    pub struct ColoredLog {
+        term: Box<StdoutTerminal>,
+    }
+
+    impl ColoredLog {
+        pub fn new() -> ColoredLog {
+            ColoredLog {  term: term::stdout().unwrap()  }
+        }
+
+        pub fn write(&mut self, text: &str) -> io::Result<usize> {
+            self.term.write(text.as_bytes())
+        }
+
+        pub fn writeln(&mut self, text: &str) -> io::Result<usize> {
+            let mut s = String::new();
+            s.push_str(text);
+            s.push_str("\n");
+            self.term.write(s.as_bytes())
+        }
+
+        pub fn write_color(&mut self,
+                           text: &str,
+                           color: Color) -> io::Result<usize> {
+            self.term.fg(color).unwrap();
+            let r = self.write(text);
+            self.term.reset().unwrap();
+            r
+        }
+
+        pub fn writeln_color(&mut self,
+                             text: &str,
+                             color: Color) -> io::Result<usize> {
+            self.term.fg(color).unwrap();
+            let r = self.write(&format!("{}\n", text));
+            self.term.reset().unwrap();
+            r
+        }
+
+        fn log(&mut self, color: Color, tag: &str, message: &str) {
+            self.write(&format!("[")).unwrap();
+            self.term.fg(color).unwrap();
+            self.write(&format!("{}", tag)).unwrap();
+            self.term.reset().unwrap();
+            self.write(&format!("] {}", message)).unwrap();
+        }
+
+        pub fn error(&mut self, message: &str) {
+            self.log(color::RED, "E", message);
+        }
+
+        pub fn warn(&mut self, message: &str) {
+            self.log(color::YELLOW, "W", message);
+        }
+
+        pub fn info(&mut self, message: &str) {
+            self.log(color::BRIGHT_GREEN, "I", message);
+        }
+
+        pub fn debug(&mut self, message: &str) {
+            self.log(color::BRIGHT_BLUE, "D", message);
+        }
+    }
+}
 
 
 /// This module provides the core functionality from the binary in library form.
@@ -226,6 +309,8 @@ pub mod bare {
 
 
 fn main() {
+    let mut log = log::ColoredLog::new();
+
     let raw_args: Vec<String> = std::env::args().collect();
     let args = cli::Args::parse(&raw_args);
 
@@ -236,10 +321,10 @@ fn main() {
 
     let proposal = bare::propose_renames(&args.file_paths, &args.patterns);
     for file in proposal.not_found.iter() {
-        println!("[WARN] Not found, skipping {:?}", file);
+        log.warn(&format!("Not found, skipping {:?}\n", file));
     }
     for (src, dst) in proposal.renames.clone() {
-        println!("[INFO] {:?}    =>    {:?}", src, dst);
+        log.info(&format!("{:?}    =>    {:?}\n", src, dst));
     }
 
     if args.dry_run {
@@ -248,18 +333,18 @@ fn main() {
 
     const DEFAULT: &'static str = "";
     let re = Regex::new(r"^(?i)(y|n|yes|no)?\n$").unwrap();
-    let answer = cli::ask_user("[INFO] Accord the changes? [y/N] ", &re);
+    let answer = cli::ask_user("Accord the changes? [y/N] ", &re);
     match answer.to_lowercase().trim() {
         "y"|"yes" => {
             for (src, dst) in proposal.renames {
                 if let Err(e) = std::fs::rename(&src, &dst) {
-                    println!("[ERROR] Failed to rename {:?}: {:?}", src, e);
+                    log.error(&format!("Failed to rename {:?}: {:?}\n", src, e));
                 }
             }
-            println!("[INFO] Done renaming files.");
+            log.info("Done renaming files.");
         },
-        "n"|"no"|DEFAULT => println!("[INFO] Aborted renaming files."),
-        ans => println!("[WARN] Don't know what to do with answer {:?}", ans),
+        "n"|"no"|DEFAULT => log.info("Aborted renaming files."),
+        ans => log.warn(&format!("Don't know what to do with answer {:?}", ans)),
     }
 
     exit::quit();

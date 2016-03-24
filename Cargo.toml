@@ -7,3 +7,4 @@ authors = ["Joey Ezechiëls <joey.ezechiels@gmail.com>"]
 
 # walkdir = "0.1.5"
 regex = "0.1"
+term = "0.4.4"
