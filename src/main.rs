@@ -153,34 +153,63 @@ pub mod cli {
         }
     }
 
+    struct HelpWriter {
+        writer: log::Writer
+    }
+
+    impl HelpWriter {
+        pub fn new() -> Self { HelpWriter {  writer: log::Writer::new()  } }
+
+        pub fn category(mut self, cat: &str) -> Self {
+            self.writer.writeln_color(cat, color::YELLOW).unwrap();
+            self
+        }
+
+        pub fn argument(mut self, prefix: &str, arg: &str) -> Self {
+            let p = String::from(prefix) + " ";
+            self.writer.write_color(&p, color::GREEN).unwrap();
+            self.writer.writeln_color(arg, color::CYAN).unwrap();
+            self
+        }
+
+        pub fn option(mut self, left: &str, right: &str) -> Self {
+            let left = &format!("{:<15} ", left);
+            let right = &format!("{} ", right);
+            self.writer.write_color(left, color::BRIGHT_WHITE).unwrap();
+            self.writer.writeln_color(right, color::WHITE).unwrap();
+            self
+        }
+
+        pub fn uri(mut self, uri: &str) -> Self {
+            self.writer.write_color(uri, color::MAGENTA).unwrap();
+            self
+        }
+
+        pub fn text(mut self, text: &str) -> Self {
+            self.writer.write(text).unwrap();
+            self
+        }
+    }
+
     /// Print the usage string to stdout.
     pub fn print_usage() {
-        let mut log = log::ColoredLog::new();
-        println!("BARE is the BAtch REnaming tool. It works by matching regexes
-against filenames, and applying them in the order they were provided.
-For regex syntax, see https://doc.rust-lang.org/regex/regex/index.html#syntax
-\n");
-        log.writeln_color("Usage:", color::YELLOW);
-        log.write_color("  bare ", color::GREEN);
-        log.writeln_color("[-h | --help]", color::CYAN);
-        log.writeln_color("       [-d | --dry-run]", color::CYAN);
-        log.writeln_color("       [-f FILE+ | --files FILE+]", color::CYAN);
-        log.writeln_color("       [-p [PAT REP]+ | --pattern [PAT REP+]]",
-                          color::CYAN);
-        log.writeln_color("", color::WHITE);
-        log.writeln_color("Options:", color::YELLOW);
-        log.writeln_color("  -h --help      Show this screen",
-                          color::WHITE);
-        log.writeln_color("  -d --dry-run   Don't actually rename any files",
-                          color::WHITE);
-        log.writeln_color("  -f --files     The files to rename", color::WHITE);
-        let x = String::from("  -p --pattern   Matches files ")
-            + "against each PAT regex and replaces each match\n"
-            + "                   with the corresponding REP. A minimum of\n"
-            + "                   1 PAT and 1 REP is required.";
-        log.writeln_color(&x, color::WHITE);
-        log.writeln_color("  ", color::WHITE);
-        log.writeln_color("  ", color::WHITE);
+        HelpWriter::new()
+            .text(
+"BARE is the ultimate BAtch REnaming tool. It works by matching regexes
+against file names, and applying them in the order they were provided. See \n")
+            .uri("https://doc.rust-lang.org/regex/regex/#syntax")
+            .text(" for regex syntax.\n\n")
+            .category("Usage:")
+            .argument("  bare",  "[-h | --help]")
+            .argument("      ",  "[-d | --dry-run]")
+            .argument("      ",  "[-f FILE+ | --files FILE+]")
+            .argument("      ",  "[-p [PAT REP]+ | --pattern [PAT REP+]]")
+            .text("\n")
+            .category("Options:")
+            .option("  -h --help",    "Show this screen")
+            .option("  -d --dry-run", "Don't actually rename any files")
+            .option("  -f --files",   "Specify the files to rename")
+            .option("  -p --pattern", "Match files ");
     }
 
     /// Print a question, then wait for user input.
