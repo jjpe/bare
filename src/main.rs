@@ -38,7 +38,6 @@ pub mod exit {
 /// [`Args`]: ./struct.Args.html
 pub mod cli {
     use regex::Regex;
-    use std::env;
     use std::io;
     use std::io::{Write};
     use std::path::Path;
@@ -49,6 +48,15 @@ pub mod cli {
     fn name_regex(name: &str, regex: &Regex) -> Regex {
         let raw = format!("(?P<{}>{})", name, &regex);
         Regex::new(&raw).unwrap()
+    }
+
+    fn args_for<'b>(raw_args: &'b [String],
+                    flag_aliases: Vec<&str>) -> Vec<&'b String> {
+        raw_args.iter()
+            .skip_while(|raw| !flag_aliases.contains(&raw.as_str()))
+            .skip(1)
+            .take_while(|raw| !raw.starts_with("-"))
+            .collect()
     }
 
     #[derive(Debug)]
@@ -69,30 +77,38 @@ pub mod cli {
             }
         }
 
-        fn parse_help(mut self) -> Self {
-            let vec : Vec<String> = env::args()
-                .filter(|arg| vec!["-h", "--help"].contains(&arg.as_str()))
-                .collect();
-            self.print_help = vec.len() > 0;
+        fn parse_help(mut self, raw_args: &'a [String]) -> Self {
+            for arg in raw_args {
+                if vec!["-h", "--help"].contains(&arg.as_str()) {
+                    self.print_help = true;
+                    return self
+                }
+            }
+            self.print_help = false;
             self
         }
 
-        fn parse_dry_run(mut self) -> Self {
-            let vec : Vec<String> = env::args()
-                .filter(|arg| vec!["-d", "--dry-run"].contains(&arg.as_str()))
-                .collect();
-            self.dry_run = vec.len() > 0;
+        fn parse_dry_run(mut self, raw_args: &'a [String]) -> Self {
+            for arg in raw_args {
+                if vec!["-d", "--dry-run"].contains(&arg.as_str()) {
+                    self.dry_run = true;
+                    return self
+                }
+            }
+            self.dry_run = false;
             self
         }
 
-        fn parse_files(mut self, file_args: Vec<&'a String>) -> Self {
+        fn parse_files(mut self, raw_args: &'a [String]) -> Self {
+            let file_args = args_for(raw_args, vec!["-f", "--files"]);
             for file in file_args.iter().cloned() {
                 self.file_paths.push(Path::new(file));
             }
             self
         }
 
-        fn parse_patterns(mut self, raw_patterns: Vec<&'a String>) -> Self {
+        fn parse_patterns(mut self, raw_args: &'a [String]) -> Self {
+            let raw_patterns = args_for(raw_args, vec!["-p", "--pattern"]);
             let num_raw_patterns = raw_patterns.len();
             if num_raw_patterns < 2 || num_raw_patterns % 2 != 0 {
                 println!("Error: Malformed pattern detected in {:?}",
@@ -118,21 +134,12 @@ pub mod cli {
             self
         }
 
-        pub fn parse(raw_args: &'a Vec<String>) -> Self {
-            let args_for = |flag_aliases: Vec<&str>| {
-                raw_args.iter()
-                    .skip_while(|raw| !flag_aliases.contains(&raw.as_str()))
-                    .skip(1)
-                    .take_while(|raw| !raw.starts_with("-"))
-                    .collect()
-            };
-            let raw_files:    Vec<&String> = args_for(vec!["-f", "--files"]);
-            let raw_patterns: Vec<&String> = args_for(vec!["-p", "--pattern"]);
+        pub fn parse(raw_args: &'a [String]) -> Self {
             Args::new()
-                .parse_help()
-                .parse_dry_run()
-                .parse_files(raw_files)
-                .parse_patterns(raw_patterns)
+                .parse_help(raw_args)
+                .parse_dry_run(raw_args)
+                .parse_files(raw_args)
+                .parse_patterns(raw_args)
         }
     }
 
@@ -210,7 +217,7 @@ pub mod bare {
 
 /// Main fn.
 fn main() {
-    let raw_args = std::env::args().collect();
+    let raw_args: Vec<String> = std::env::args().collect();
     let args = cli::Args::parse(&raw_args);
 
     if args.print_help {
