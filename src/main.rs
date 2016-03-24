@@ -187,7 +187,7 @@ For regex syntax, see https://doc.rust-lang.org/regex/regex/index.html#syntax
     /// Keep asking the question while the user input fails validation.
     /// Return the answer upon successful validation.
     pub fn ask_user(question: &str, validator: &Regex) -> String {
-        let mut log = log::ColoredLog::new();
+        let mut log = log::RainbowLog::new();
         let mut answer = String::new();
         while !validator.is_match(&answer) {
             log.info(&format!("{}", question));
@@ -200,7 +200,7 @@ For regex syntax, see https://doc.rust-lang.org/regex/regex/index.html#syntax
     }
 }
 
-mod log {
+pub mod log {
     use std::io;
     use term;
     use term::StdoutTerminal;
