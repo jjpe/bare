@@ -155,6 +155,7 @@ Usage:
 
 Options:
   -h --help      Show this screen
+  -d --dry-run   Don't actually rename any files
   -f --files     The files to rename
   -p --pattern   Matches files against each PAT regex and replaces each
                    match with the corresponding REP. A minimum of 1 PAT
