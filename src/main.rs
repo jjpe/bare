@@ -32,6 +32,8 @@ pub mod exit {
     }
 }
 
+
+
 /// CLI facilities. Provides an argument parser in the form of [`Args`],
 /// as well as some UI utilities.
 ///
@@ -162,19 +164,23 @@ Options:
                    and 1 REP is required.");
     }
 
+    /// Print a question, then wait for user input.
+    /// Keep asking the question while the user input fails validation.
+    /// Return the answer upon successful validation.
     pub fn ask_user(question: &str, validator: &Regex) -> String {
-        let mut answer_buf = String::new();
-        while !validator.is_match(&answer_buf) {
+        let mut answer = String::new();
+        while !validator.is_match(&answer) {
             print!("{}", question);
             io::stdout().flush().unwrap_or_else(
                 |e| println!("Error flushing stdout: {:?}", e));
-            answer_buf.clear();
-            io::stdin().read_line(&mut answer_buf)
+            answer.clear();
+            io::stdin().read_line(&mut answer)
                 .expect("Failed to read input");
         }
-        answer_buf
+        answer
     }
 }
+
 
 
 /// This module provides the core functionality from the binary in library form.
@@ -216,7 +222,7 @@ pub mod bare {
 }
 
 
-/// Main fn.
+
 fn main() {
     let raw_args: Vec<String> = std::env::args().collect();
     let args = cli::Args::parse(&raw_args);
