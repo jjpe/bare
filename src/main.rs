@@ -161,7 +161,7 @@ Options:
                    and 1 REP is required.");
     }
 
-    pub fn get_user_input(question: &str, validator: &Regex) -> String {
+    pub fn ask_user(question: &str, validator: &Regex) -> String {
         let mut answer_buf = String::new();
         while !validator.is_match(&answer_buf) {
             print!("{}", question);
@@ -239,7 +239,7 @@ fn main() {
 
     const DEFAULT: &'static str = "";
     let re = Regex::new(r"^(?i)(y|n|yes|no)?\n$").unwrap();
-    let answer = cli::get_user_input("[INFO] Accord the changes? [y/N] ", &re);
+    let answer = cli::ask_user("[INFO] Accord the changes? [y/N] ", &re);
     match answer.to_lowercase().trim() {
         "y"|"yes" => {
             println!("Ju Li! Do the thing!");
