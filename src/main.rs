@@ -152,8 +152,10 @@ against filenames, and applying them in the order they were provided.
 For regex syntax, see https://doc.rust-lang.org/regex/regex/index.html#syntax
 
 Usage:
-  bare [-f FILE+      | --files=FILE+]
-       [-p [PAT REP]+ | --pattern=[PAT REP+]]
+  bare [-h | --help]
+       [-d | --dry-run]
+       [-f FILE+ | --files FILE+]
+       [-p [PAT REP]+ | --pattern [PAT REP+]]
 
 Options:
   -h --help      Show this screen
