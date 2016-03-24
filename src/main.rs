@@ -113,7 +113,7 @@ pub mod cli {
         fn parse_patterns(mut self, raw_args: &'a [String]) -> Self {
             let raw_patterns = args_for(raw_args, vec!["-p", "--pattern"]);
             let num_raw_patterns = raw_patterns.len();
-            let mut log = log::ColoredLog::new();
+            let mut log = log::RainbowLog::new();
             if num_raw_patterns < 2 {
                 log.error(&format!("Not enough patterns specified: {:?}\n",
                                    raw_patterns));
@@ -207,13 +207,13 @@ mod log {
     use term::color;
     use term::color::Color;
 
-    pub struct ColoredLog {
+    pub struct Writer {
         term: Box<StdoutTerminal>,
     }
 
-    impl ColoredLog {
-        pub fn new() -> ColoredLog {
-            ColoredLog {  term: term::stdout().unwrap()  }
+    impl Writer {
+        pub fn new() -> Self {
+            Writer  {  term: term::stdout().unwrap()  }
         }
 
         pub fn write(&mut self, text: &str) -> io::Result<usize> {
@@ -221,10 +221,9 @@ mod log {
         }
 
         pub fn writeln(&mut self, text: &str) -> io::Result<usize> {
-            let mut s = String::new();
-            s.push_str(text);
-            s.push_str("\n");
-            self.term.write(s.as_bytes())
+            let r = self.write(text);
+            self.write("\n").unwrap();
+            r
         }
 
         pub fn write_color(&mut self,
@@ -244,13 +243,21 @@ mod log {
             self.term.reset().unwrap();
             r
         }
+    }
+
+    pub struct RainbowLog {
+        writer: Writer,
+    }
+
+    impl RainbowLog {
+        pub fn new() -> Self { RainbowLog {  writer: Writer::new()  } }
 
         fn log(&mut self, color: Color, tag: &str, message: &str) {
-            self.write(&format!("[")).unwrap();
-            self.term.fg(color).unwrap();
-            self.write(&format!("{}", tag)).unwrap();
-            self.term.reset().unwrap();
-            self.write(&format!("] {}", message)).unwrap();
+            self.writer.write(&format!("[")).unwrap();
+            self.writer.term.fg(color).unwrap();
+            self.writer.write(&format!("{}", tag)).unwrap();
+            self.writer.term.reset().unwrap();
+            self.writer.write(&format!("] {}", message)).unwrap();
         }
 
         pub fn error(&mut self, message: &str) {
@@ -313,7 +320,7 @@ pub mod bare {
 
 
 fn main() {
-    let mut log = log::ColoredLog::new();
+    let mut log = log::RainbowLog::new();
 
     let raw_args: Vec<String> = std::env::args().collect();
     let args = cli::Args::parse(&raw_args);
