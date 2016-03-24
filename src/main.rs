@@ -233,6 +233,10 @@ fn main() {
         println!("[INFO] {:?}    =>    {:?}", src, dst);
     }
 
+    if args.dry_run {
+        return
+    }
+
     const DEFAULT: &'static str = "";
     let re = Regex::new(r"^(?i)(y|n|yes|no)?\n$").unwrap();
     let answer = cli::get_user_input("[INFO] Accord the changes? [y/N] ", &re);
