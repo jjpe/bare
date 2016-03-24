@@ -243,7 +243,12 @@ fn main() {
     let answer = cli::ask_user("[INFO] Accord the changes? [y/N] ", &re);
     match answer.to_lowercase().trim() {
         "y"|"yes" => {
-            println!("Ju Li! Do the thing!");
+            for (src, dst) in proposal.renames {
+                if let Err(e) = std::fs::rename(&src, &dst) {
+                    println!("[ERROR] Failed to rename {:?}: {:?}", src, e);
+                }
+            }
+            println!("[INFO] Done renaming files.");
         },
         "n"|"no"|DEFAULT => println!("[INFO] Aborted renaming files."),
         ans => println!("[WARN] Don't know what to do with answer {:?}", ans),
