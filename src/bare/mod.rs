@@ -9,6 +9,7 @@ use std::path::{Path,PathBuf};
 
 pub type Pattern = (Regex, String);
 
+#[derive(Debug)]
 pub struct RenameProposal {
     pub renames: Vec<(PathBuf, PathBuf)>,
     pub not_found: Vec<String>
