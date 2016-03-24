@@ -1,6 +1,6 @@
-// Batch Renaming tool.
-//
-// Copyright @ 2016 Joey Ezechiels
+//! Batch Renaming tool.
+//!
+//! Copyright @ 2016 Joey Ezechiels
 extern crate regex;
 extern crate term;
 
