@@ -230,7 +230,7 @@ fn main() {
     for file in proposal.not_found.iter() {
         println!("[WARN] Not found, skipping {:?}", file);
     }
-    for (src, dst) in proposal.renames {
+    for (src, dst) in proposal.renames.clone() {
         println!("[INFO] {:?}    =>    {:?}", src, dst);
     }
 
