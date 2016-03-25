@@ -5,7 +5,7 @@
 use bare::log;
 use bare::Pattern;
 use bare::exit;
-use bare::exit::ExitCode::*;
+use bare::exit::ExitCode::{NotEnoughPatterns, MalformedPattern};
 use regex::Regex;
 use std::io;
 use std::io::{Write};
@@ -100,8 +100,7 @@ impl<'a> Args<'a> {
             let mut patterns = vec![];
             for idx in 0..num_raw_patterns - 1 {
                 if idx % 2 != 0 {
-                    // Odd indices are values, so don't start there.
-                    continue;
+                    continue; // Odd indices are values, so don't start there.
                 }
                 // Call every regex "regex" for easy reference. Since
                 // they're used successively, the names won't clash.

@@ -10,9 +10,7 @@ pub struct Writer {
 }
 
 impl Writer {
-    pub fn new() -> Self {
-        Writer  {  term: term::stdout().unwrap()  }
-    }
+    pub fn new() -> Self { Writer { term: term::stdout().unwrap() } }
 
     pub fn write(&mut self, text: &str) -> io::Result<usize> {
         self.term.write(text.as_bytes())
