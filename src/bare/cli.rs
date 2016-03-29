@@ -111,7 +111,8 @@ against file names, and applying them in the order they were provided.\nSee ")
         if raw.args_for(aliases).is_some() {
             HelpWriter::new()
                 .text("bare ")
-                .numeric("v").numeric(env!("CARGO_PKG_VERSION"))
+                .colored("v", color::BRIGHT_YELLOW)
+                .colored(env!("CARGO_PKG_VERSION"), color::BRIGHT_YELLOW)
                 .text("\n");
             exit::quit();
         }
@@ -227,8 +228,8 @@ impl HelpWriter {
         self
     }
 
-    pub fn numeric(mut self, uri: &str) -> Self {
-        self.writer.write_color(uri, color::YELLOW).unwrap();
+    pub fn colored(mut self, text: &str, color: color::Color) -> Self {
+        self.writer.write_color(text, color).unwrap();
         self
     }
 
