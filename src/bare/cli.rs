@@ -240,3 +240,59 @@ pub fn ask_user(question: &str, validator: &Regex) -> String {
     }
     answer
 }
+
+
+
+
+
+#[cfg(test)]
+mod tests {
+    use bare::cli::ArgsFor;
+
+    fn basic_setup<'a>() -> Vec<&'a str> {
+        vec![
+            "bare",                                 // program name
+            "-p", "ein", "zwei", "drei", "vier",    // patterns
+            "--files", "foo.bar", "baz.qux",        // files
+            "-d",                                   // dry run
+            "--help",                               // help
+        ]
+    }
+
+    #[test]
+    fn test_args_for_help() {
+        let raw = basic_setup();
+        let hargs = raw.args_for(&["-h", "--help"]).unwrap();
+        assert_eq!(hargs.len(), 1);
+        assert_eq!(raw[10].to_string(),  hargs[0].to_string());
+    }
+
+    #[test]
+    fn test_args_for_dry_run() {
+        let raw = basic_setup();
+        let dargs = raw.args_for(&["-d", "--dry-run"]).unwrap();
+        assert_eq!(dargs.len(), 1);
+        assert_eq!(raw[9].to_string(),  dargs[0].to_string());
+    }
+
+    #[test]
+    fn test_args_for_patterns() {
+        let raw = basic_setup();
+        let pargs = raw.args_for(&["-p", "--pattern"]).unwrap();
+        assert_eq!(&raw[1..6],  pargs);
+    }
+
+    #[test]
+    fn test_args_for_files() {
+        let raw = basic_setup();
+        let fargs = raw.args_for(&["-f", "--files"]).unwrap();
+        assert_eq!(&raw[6..9],  fargs);
+    }
+
+    #[test]
+    fn test_args_for_bogus_flag() {
+        let raw = basic_setup();
+        let no_args = raw.args_for(&["-s", "--some-bogus-flag"]);
+        assert_eq!(None,  no_args);
+    }
+}
