@@ -82,14 +82,14 @@ impl<'a> Args<'a> {
             HelpWriter::new()
                 .text(
 "BARE is the ultimate BAtch REnaming tool. It works by matching regexes
-against file names, and applying them in the order they were provided. See \n")
+against file names, and applying them in the order they were provided.\nSee ")
                 .uri("https://doc.rust-lang.org/regex/regex/#syntax")
                 .text(" for regex syntax.\n\n")
                 .category("Usage:")
                 .argument("  bare",  "[-h | --help]")
                 .argument("      ",  "[-d | --dry-run]")
                 .argument("      ",  "[-f FILE+ | --files FILE+]")
-                .argument("      ",  "[-p [PAT REP]+ | --pattern [PAT REP+]]")
+                .argument("      ",  "[-p [PAT REP]+ | --pattern [PAT REP]+]")
                 .text("\n")
                 .category("Options:")
                 .option("  -h --help",    "Show this screen")
