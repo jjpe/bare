@@ -5,40 +5,45 @@ pub mod exit;
 pub mod log;
 
 use regex::Regex;
+use std::collections::HashMap;
 use std::path::{Path,PathBuf};
 
+/// A Pattern object is a `(regex, replacement)` tuple.
+/// The regex is used to match against files, and
+/// replacement is the replacement text.
 pub type Pattern = (Regex, String);
 
-#[derive(Debug)]
-pub struct RenameProposal {
-    pub renames: Vec<(PathBuf, PathBuf)>,
-    pub not_found: Vec<String>
-}
+/// A Rename object is a `(src, dst)` tuple,
+/// where `src` and `dst` represent file names.
+pub type Rename = (String, String);
 
-pub fn propose_renames(paths: &[&Path],
-                       patterns: &[Pattern]) -> RenameProposal {
-    let mut renames: Vec<(PathBuf, PathBuf)> = vec![];
-    let mut not_found: Vec<String> = vec![];
+///
+///
+// [PathBuf](https://doc.rust-lang.org/std/path/struct.PathBuf.html)
+pub type Proposal = HashMap<PathBuf, Vec<Rename>>;
+
+pub fn propose_renames(paths: &[&Path], patterns: &[Pattern])
+                       -> (Proposal, Vec<PathBuf>) {
+    let (mut proposal, mut files_not_found) = (HashMap::new(), vec![]);
     for src_path in paths.iter() {
-        let parent: &Path = src_path.parent().unwrap();
-        let src_name: &str =
-            src_path.file_name().unwrap().to_str().unwrap();
         if !src_path.exists() {
-            not_found.push(String::from(src_path.to_str().unwrap()));
+            files_not_found.push(src_path.to_path_buf());
             continue
         }
-        let mut dst_name = String::from(src_name);
-        for pat in patterns.iter() {
-            let (regex, replacement): (&Regex, &str) = (&pat.0, &pat.1);
+        let src_name = src_path.file_name().unwrap()
+            .to_str().unwrap().to_string();
+        let mut dst_name = src_name.clone();
+        for &(ref regex, ref replacement) in patterns.iter() {
             if regex.is_match(&dst_name) {
-                dst_name = regex.replace(&dst_name, replacement);
+                dst_name = regex.replace_all(&dst_name, replacement.as_str());
             }
         }
-        let dst_path = Path::new(parent.to_str().unwrap())
-            .join(Path::new(&dst_name));
-        renames.push((src_path.to_path_buf(), dst_path));
+        let parent = src_path.parent().unwrap().to_path_buf();
+        let mut renames = proposal.get(&parent).unwrap_or(&vec![]).clone();
+        renames.push( (src_name, dst_name) );
+        proposal.insert(parent, renames);
     }
-    RenameProposal { renames: renames, not_found: not_found }
+    (proposal, files_not_found)
 }
 
 
