@@ -79,7 +79,24 @@ impl<'a> Args<'a> {
 
     fn parse_help(self, raw: &[&str], aliases: &[&str]) -> Self {
         if raw.args_for(aliases).is_some() {
-            print_usage();
+            HelpWriter::new()
+                .text(
+"BARE is the ultimate BAtch REnaming tool. It works by matching regexes
+against file names, and applying them in the order they were provided. See \n")
+                .uri("https://doc.rust-lang.org/regex/regex/#syntax")
+                .text(" for regex syntax.\n\n")
+                .category("Usage:")
+                .argument("  bare",  "[-h | --help]")
+                .argument("      ",  "[-d | --dry-run]")
+                .argument("      ",  "[-f FILE+ | --files FILE+]")
+                .argument("      ",  "[-p [PAT REP]+ | --pattern [PAT REP+]]")
+                .text("\n")
+                .category("Options:")
+                .option("  -h --help",    "Show this screen")
+                .option("  -v --version", "Print the version number")
+                .option("  -d --dry-run", "Don't actually rename any files")
+                .option("  -f --files",   "Specify the files to rename")
+                .option("  -p --pattern", "Match files ");
             exit::quit();
         }
         self
@@ -219,27 +236,6 @@ impl HelpWriter {
         self.writer.write(text).unwrap();
         self
     }
-}
-
-/// Print the usage string to stdout.
-pub fn print_usage() {
-    HelpWriter::new()
-        .text(
-"BARE is the ultimate BAtch REnaming tool. It works by matching regexes
-against file names, and applying them in the order they were provided. See \n")
-        .uri("https://doc.rust-lang.org/regex/regex/#syntax")
-        .text(" for regex syntax.\n\n")
-        .category("Usage:")
-        .argument("  bare",  "[-h | --help]")
-        .argument("      ",  "[-d | --dry-run]")
-        .argument("      ",  "[-f FILE+ | --files FILE+]")
-        .argument("      ",  "[-p [PAT REP]+ | --pattern [PAT REP+]]")
-        .text("\n")
-        .category("Options:")
-        .option("  -h --help",    "Show this screen")
-        .option("  -d --dry-run", "Don't actually rename any files")
-        .option("  -f --files",   "Specify the files to rename")
-        .option("  -p --pattern", "Match files ");
 }
 
 /// Print a question, then wait for user input.
