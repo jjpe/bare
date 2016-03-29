@@ -5,25 +5,57 @@
 use bare::log;
 use bare::Pattern;
 use bare::exit;
-use bare::exit::ExitCode::{NotEnoughPatterns, MalformedPattern};
+use bare::exit::ExitCode;
+use regex;
 use regex::Regex;
 use std::io;
 use std::io::{Write};
 use std::path::Path;
 use term::color;
 
-fn name_regex(name: &str, regex: &Regex) -> Regex {
-    let raw = format!("(?P<{}>{})", name, &regex);
-    Regex::new(&raw).unwrap()
+trait RegexUtils {
+    fn named(self, name: &str) -> Self;
+    fn case_insensitive(self) -> Self;
 }
 
-fn args_for<'b>(raw_args: &'b [String],
-                flag_aliases: Vec<&str>) -> Vec<&'b String> {
-    raw_args.iter()
-        .skip_while(|raw| !flag_aliases.contains(&raw.as_str()))
-        .skip(1)
-        .take_while(|raw| !raw.starts_with("-"))
-        .collect()
+impl RegexUtils for Result<Regex, regex::Error> {
+    fn named(self, name: &str) -> Self {
+        match self {
+            Ok(regex) => Regex::new(&format!("(?P<{}>({}))", name, regex)),
+            Err(e) => Err(e),
+        }
+    }
+
+    fn case_insensitive(self) -> Self {
+        match self {
+            Ok(regex) => Regex::new(&format!("((?i){})", regex)),
+            Err(e) => Err(e),
+        }
+    }
+}
+
+
+
+
+trait ArgsFor<'a> {
+    fn args_for<'l>(&'a self, aliases: &'l [&'l str]) -> Option<&'a Self>;
+}
+
+impl<'a> ArgsFor<'a> for [&'a str] {
+    fn args_for<'l>(&'a self, aliases: &'l [&'l str]) -> Option<&'a Self> {
+        for (idx, arg) in self.iter().enumerate() {
+            if aliases.contains(arg) {
+                let start = idx + 1;
+                for (offset, a) in self[start..].iter().enumerate() {
+                    if a.starts_with("-") {
+                        return Some(&self[start - 1  .. start + offset]);
+                    }
+                }
+                return Some(&self[start - 1 .. self.len()]);
+            }
+        }
+        None
+    }
 }
 
 
@@ -33,92 +65,101 @@ fn args_for<'b>(raw_args: &'b [String],
 pub struct Args<'a> {
     pub file_paths:   Vec<&'a Path>,
     pub patterns:     Vec<Pattern>,
-    pub print_help:   bool,
     pub dry_run:      bool,
 }
-
-
-
 
 impl<'a> Args<'a> {
     fn new() -> Self {
         Args {
             file_paths: vec![],
             patterns:   vec![],
-            print_help: false,
             dry_run:    false,
         }
     }
 
-    fn parse_help(mut self, raw_args: &'a [String]) -> Self {
-        for arg in raw_args {
-            if vec!["-h", "--help"].contains(&arg.as_str()) {
-                self.print_help = true;
-                return self
-            }
-        }
-        self.print_help = false;
-        self
-    }
-
-    fn parse_dry_run(mut self, raw_args: &'a [String]) -> Self {
-        for arg in raw_args {
-            if vec!["-d", "--dry-run"].contains(&arg.as_str()) {
-                self.dry_run = true;
-                return self
-            }
-        }
-        self.dry_run = false;
-        self
-    }
-
-    fn parse_files(mut self, raw_args: &'a [String]) -> Self {
-        let file_args = args_for(raw_args, vec!["-f", "--files"]);
-        for file in file_args.iter().cloned() {
-            self.file_paths.push(Path::new(file));
-        }
-        self
-    }
-
-    fn parse_patterns(mut self, raw_args: &'a [String]) -> Self {
-        let raw_patterns = args_for(raw_args, vec!["-p", "--pattern"]);
-        let num_raw_patterns = raw_patterns.len();
-        let mut log = log::RainbowLog::new();
-        if num_raw_patterns < 2 {
-            log.error(&format!("Not enough patterns specified: {:?}\n",
-                               raw_patterns));
+    fn parse_help(self, raw: &[&str], aliases: &[&str]) -> Self {
+        if raw.args_for(aliases).is_some() {
             print_usage();
-            exit::abort(NotEnoughPatterns);
+            exit::quit();
         }
-        if num_raw_patterns % 2 != 0 {
-            log.error(&format!("Malformed pattern detected in {:?}\n",
-                               raw_patterns));
-            print_usage();
-            exit::abort(MalformedPattern);
-        }
-        self.patterns = {
-            let mut patterns = vec![];
-            for idx in 0..num_raw_patterns - 1 {
-                if idx % 2 != 0 {
-                    continue; // Odd indices are values, so don't start there.
+        self
+    }
+
+    fn parse_dry_run(mut self, raw: &[&str], aliases: &[&str]) -> Self {
+        self.dry_run = raw.args_for(aliases).is_some();
+        self
+    }
+
+    fn parse_files(mut self, raw: &'a [&'a str], aliases: &[&str]) -> Self {
+        match raw.args_for(aliases) {
+            None => exit::abort(ExitCode::MissingRequiredCliArgument(
+                format!("{:?}", aliases))),
+            Some(args) => {
+                if args.len() == 1 && aliases.contains(&args[0]) {
+                    exit::abort(ExitCode::NotEnoughFiles);
                 }
-                // Call every regex "regex" for easy reference. Since
-                // they're used successively, the names won't clash.
-                let regex = Regex::new(raw_patterns[idx]).unwrap();
-                let regex = name_regex("regex", &regex);
-                patterns.push( (regex, raw_patterns[idx + 1].clone()) );
-            }
-            patterns
+                for file in &args[1..] { // Slice off the alias
+                    self.file_paths.push(Path::new(file));
+                }
+            },
         };
         self
     }
 
-    pub fn parse(raw_args: &'a [String]) -> Self {
+    fn validate_patterns(raw_patterns: &[&str], aliases: &[&str]) {
+        if !aliases.contains(&raw_patterns[0]) {
+            // TODO: Error: wrong format somehow
+        }
+        let patterns = &raw_patterns[1..];
+        let len = patterns.len();
+        if len < 2 {
+            exit::abort(ExitCode::NotEnoughPatterns(
+                format!("{:?}", &patterns)));
+        }
+        if len % 2 != 0 {
+            exit::abort(ExitCode::MalformedPattern(
+                format!("{:?}", &patterns)));
+        }
+    }
+
+    fn parse_patterns(mut self, raw: &'a [&'a str], aliases: &[&str]) -> Self {
+        match raw.args_for(&aliases) {
+            None => exit::abort(ExitCode::MissingRequiredCliArgument(
+                format!("{:?}", aliases))),
+            Some(patterns) => {
+                Self::validate_patterns(&patterns, aliases);
+                let patterns = &patterns[1..]; // Slice off the alias proper
+                let mut idx = 0;
+                while idx < patterns.len() {
+                    // Since the regexes are not used concurrently,
+                    // the names won't clash with each other.
+                    let result = Regex::new(patterns[idx])
+                        .case_insensitive()
+                        .named("regex");
+                    match result {
+                        Ok(regex) => {
+                            let replacement = patterns[idx + 1];
+                            let pattern = (regex, replacement.to_string());
+                            self.patterns.push(pattern);
+                            idx += 2;
+                        },
+                        Err(e) => {
+                            let msg = format!("{}", e);
+                            exit::abort(ExitCode::MalformedRegex(msg));
+                        },
+                    };
+                }
+            }
+        }
+        self
+    }
+
+    pub fn parse(raw_args: &'a [&'a str]) -> Self {
         Args::new()
-            .parse_help(raw_args)
-            .parse_dry_run(raw_args)
-            .parse_files(raw_args)
-            .parse_patterns(raw_args)
+            .parse_help(raw_args,     &["-h", "--help"])
+            .parse_dry_run(raw_args,  &["-d", "--dry-run"])
+            .parse_files(raw_args,    &["-f", "--files"])
+            .parse_patterns(raw_args, &["-p", "--pattern"])
     }
 }
 
@@ -128,9 +169,6 @@ impl<'a> Args<'a> {
 struct HelpWriter {
     writer: log::Writer
 }
-
-
-
 
 impl HelpWriter {
     pub fn new() -> Self { HelpWriter {  writer: log::Writer::new()  } }
