@@ -90,6 +90,17 @@ impl<'a> Args<'a> {
         self
     }
 
+    fn parse_version(self, raw: &[&str], aliases: &[&str]) -> Self {
+        if raw.args_for(aliases).is_some() {
+            HelpWriter::new()
+                .text("bare ")
+                .numeric("v").numeric(env!("CARGO_PKG_VERSION"))
+                .text("\n");
+            exit::quit();
+        }
+        self
+    }
+
     fn parse_files(mut self, raw: &'a [&'a str], aliases: &[&str]) -> Self {
         match raw.args_for(aliases) {
             None => exit::abort(ExitCode::MissingRequiredCliArgument(
@@ -158,6 +169,7 @@ impl<'a> Args<'a> {
         Args::new()
             .parse_help(raw_args,     &["-h", "--help"])
             .parse_dry_run(raw_args,  &["-d", "--dry-run"])
+            .parse_version(raw_args,  &["-v", "--version"])
             .parse_files(raw_args,    &["-f", "--files"])
             .parse_patterns(raw_args, &["-p", "--pattern"])
     }
@@ -195,6 +207,11 @@ impl HelpWriter {
 
     pub fn uri(mut self, uri: &str) -> Self {
         self.writer.write_color(uri, color::MAGENTA).unwrap();
+        self
+    }
+
+    pub fn numeric(mut self, uri: &str) -> Self {
+        self.writer.write_color(uri, color::YELLOW).unwrap();
         self
     }
 
@@ -256,6 +273,7 @@ mod tests {
             "--files", "foo.bar", "baz.qux",        // files
             "-d",                                   // dry run
             "--help",                               // help
+            "--version",                            // version
         ]
     }
 
@@ -273,6 +291,14 @@ mod tests {
         let dargs = raw.args_for(&["-d", "--dry-run"]).unwrap();
         assert_eq!(dargs.len(), 1);
         assert_eq!(raw[9].to_string(),  dargs[0].to_string());
+    }
+
+    #[test]
+    fn test_args_for_version() {
+        let raw = basic_setup();
+        let vargs = raw.args_for(&["-v", "--version"]).unwrap();
+        assert_eq!(vargs.len(), 1);
+        assert_eq!(raw[11].to_string(),  vargs[0].to_string());
     }
 
     #[test]
