@@ -41,6 +41,9 @@ impl Writer {
     }
 }
 
+
+
+
 pub struct RainbowLog {
     writer: Writer,
 }

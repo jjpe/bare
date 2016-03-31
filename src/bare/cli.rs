@@ -15,6 +15,7 @@ use term::color;
 
 trait RegexUtils {
     fn named(self, name: &str) -> Self;
+
     fn case_insensitive(self) -> Self;
 }
 
