@@ -76,6 +76,20 @@ mod tests {
         });
     }
 
+    #[test]
+    fn propose_renames_nonexisting_file() {
+        let paths = paths();
+        ensure_dont_exist(&paths);
+        let patterns = vec![(regex(r"UNMATCHED_PATTERN"), replacement("PAT"))];
+        let (proposal, files_not_found) =
+            bare::propose_renames(&paths, &patterns);
+        assert_eq!(files_not_found, vec![
+            Path::new("/tmp/bare_test/shooshoo.bar"),
+            Path::new("/tmp/bare_test/foo-bar.qux"),
+            Path::new("/tmp/bare_test/_(grault).qux"),
+        ]);
+    }
+
     #[cfg(unix)]
     fn paths<'l>() -> Vec<&'l Path> {
         vec![
@@ -118,6 +132,18 @@ mod tests {
                 }
             }
             File::create(path).unwrap();
+        }
+    }
+
+    fn ensure_dont_exist(paths: &[&Path]) {
+        for path in paths {
+            if path.exists() {
+                if path.is_file() {
+                    fs::remove_file(path).unwrap();
+                } else if path.is_dir() {
+                    fs::remove_dir_all(path).unwrap();
+                }
+            }
         }
     }
 }
