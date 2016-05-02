@@ -83,6 +83,7 @@ mod tests {
         let patterns = vec![(regex(r"UNMATCHED_PATTERN"), replacement("PAT"))];
         let (proposal, files_not_found) =
             bare::propose_renames(&paths, &patterns);
+        assert_eq!(proposal, HashMap::new());
         assert_eq!(files_not_found, vec![
             Path::new("/tmp/bare_test/shooshoo.bar"),
             Path::new("/tmp/bare_test/foo-bar.qux"),
