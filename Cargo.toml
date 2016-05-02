@@ -1,10 +1,10 @@
 [package]
 name = "bare"
-version = "1.9.2"
+version = "1.9.3-SNAPSHOT"
 authors = ["Joey Ezechiëls <joey.ezechiels@gmail.com>"]
 
 [dependencies]
 
 # walkdir = "0.1.5"
-regex = "0.1"
+regex = "0.1.69"
 term = "0.4.4"
