@@ -87,17 +87,17 @@ against file names, and applying them in the order they were provided.\nSee ")
                 .uri("https://doc.rust-lang.org/regex/regex/#syntax")
                 .text(" for regex syntax.\n\n")
                 .category("Usage:")
-                .argument("  bare",  "[-h | --help]")
-                .argument("      ",  "[-d | --dry-run]")
-                .argument("      ",  "[-f FILE+ | --files FILE+]")
-                .argument("      ",  "[-p [PAT REP]+ | --pattern [PAT REP]+]")
+                  .argument("  bare",  "[-h | --help]")
+                  .argument("      ",  "[-d | --dry-run]")
+                  .argument("      ",  "[-f FILE+ | --files FILE+]")
+                  .argument("      ",  "[-p [PAT REP]+ | --pattern [PAT REP]+]")
                 .text("\n")
                 .category("Options:")
-                .option("  -h --help",    "Show this screen")
-                .option("  -v --version", "Print the version number")
-                .option("  -d --dry-run", "Don't actually rename any files")
-                .option("  -f --files",   "Specify the files to rename")
-                .option("  -p --pattern", "Match files ");
+                  .option("  -h --help",    "Show this screen")
+                  .option("  -v --version", "Print the version number")
+                  .option("  -d --dry-run", "Don't actually rename any files")
+                  .option("  -f --files",   "Specify the files to rename")
+                  .option("  -p --pattern", "Match files ");
             exit::quit();
         }
         self
