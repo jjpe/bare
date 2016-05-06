@@ -12,41 +12,35 @@ const DEFAULT_ANSWER: &'static str = "";
 
 fn main() {
     let mut log = bare::log::RainbowLog::new();
-
     macro_rules! error {
         ($fmtstr:expr $(, $x:expr )* ) => { {
             log.error(&format!($fmtstr, $($x),*));
         } };
     }
-
     macro_rules! warn {
         ($fmtstr:expr $(, $x:expr )* ) => { {
             log.warn(&format!($fmtstr, $($x),*));
         } };
     }
-
     macro_rules! info {
         ($fmtstr:expr $(, $x:expr )* ) => { {
             log.info(&format!($fmtstr, $($x),*));
         } };
     }
-
     macro_rules! debug {
         ($fmtstr:expr $(, $x:expr )* ) => { {
             log.debug(&format!($fmtstr, $($x),*));
         } };
     }
 
-
-
     let args = bare::cli::Args::parse();
-
     let (proposal, files_not_found) =
         bare::propose_renames(&args.file_paths, &args.patterns);
 
     for file in files_not_found.iter() {
         warn!("Not found, skipping {:?}\n", file);
     }
+
     for (parent, renames) in proposal.iter() {
         info!("{:?}:\n", parent);
         for &(ref src, ref dst) in renames.iter() {
@@ -78,7 +72,7 @@ fn main() {
             info!("Done.\n");
         },
         "n"|"no"|DEFAULT_ANSWER => log.info("Aborted.\n"),
-        ans => warn!("Don't know what to do with '{:?}'", ans),
+        ans => warn!("Don't know what to do with '{:?}'\n", ans),
     }
     bare::exit::quit();
 }
