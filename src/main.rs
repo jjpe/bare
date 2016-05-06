@@ -13,24 +13,24 @@ const DEFAULT_ANSWER: &'static str = "";
 fn main() {
     let mut log = bare::log::RainbowLog::new();
     macro_rules! error {
-        ($fmtstr:expr $(, $x:expr )* ) => { {
+        ($fmtstr:expr $(, $x:expr)*) => {
             log.error(&format!($fmtstr, $($x),*));
-        } };
+        };
     }
     macro_rules! warn {
-        ($fmtstr:expr $(, $x:expr )* ) => { {
+        ($fmtstr:expr $(, $x:expr)*) => {
             log.warn(&format!($fmtstr, $($x),*));
-        } };
+        };
     }
     macro_rules! info {
-        ($fmtstr:expr $(, $x:expr )* ) => { {
+        ($fmtstr:expr $(, $x:expr)*) => {
             log.info(&format!($fmtstr, $($x),*));
-        } };
+        };
     }
     macro_rules! debug {
-        ($fmtstr:expr $(, $x:expr )* ) => { {
+        ($fmtstr:expr $(, $x:expr)*) => {
             log.debug(&format!($fmtstr, $($x),*));
-        } };
+        };
     }
 
     let args = bare::cli::Args::parse();
