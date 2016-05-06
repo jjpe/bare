@@ -265,20 +265,39 @@ pub fn ask_user(question: &str, validator: &Regex) -> String {
 mod tests {
     use bare::cli::ArgsFor;
 
-    fn basic_setup<'a>() -> Vec<&'a str> {
-        vec![
+    fn raw_args() -> Vec<String> {
+        to_string_vec(&vec![
+            // Do *NOT* alter the args as they are.
+            // They are mined 'by position' below.
             "bare",                                 // program name
             "-p", "ein", "zwei", "drei", "vier",    // patterns
             "--files", "foo.bar", "baz.qux",        // files
             "-d",                                   // dry run
             "--help",                               // help
             "--version",                            // version
-        ]
+            // ... append more here
+        ])
+    }
+
+    fn to_string_vec(v: &[&str]) -> Vec<String> {
+        let mut r: Vec<String> = vec![];
+        for s in v.iter() {
+            r.push(s.to_string());
+        }
+        r
+    }
+
+    fn subvec(v: Vec<String>, start: usize, end: usize) -> Vec<String> {
+        let mut r: Vec<String> = vec![];
+        for i in start .. end {
+            r.push(v[i].clone());
+        }
+        r
     }
 
     #[test]
     fn test_args_for_help() {
-        let raw = basic_setup();
+        let raw = raw_args();
         let hargs = raw.args_for(&["-h", "--help"]).unwrap();
         assert_eq!(hargs.len(), 1);
         assert_eq!(raw[10].to_string(),  hargs[0].to_string());
@@ -286,7 +305,7 @@ mod tests {
 
     #[test]
     fn test_args_for_dry_run() {
-        let raw = basic_setup();
+        let raw = raw_args();
         let dargs = raw.args_for(&["-d", "--dry-run"]).unwrap();
         assert_eq!(dargs.len(), 1);
         assert_eq!(raw[9].to_string(),  dargs[0].to_string());
@@ -294,7 +313,7 @@ mod tests {
 
     #[test]
     fn test_args_for_version() {
-        let raw = basic_setup();
+        let raw = raw_args();
         let vargs = raw.args_for(&["-v", "--version"]).unwrap();
         assert_eq!(vargs.len(), 1);
         assert_eq!(raw[11].to_string(),  vargs[0].to_string());
@@ -302,21 +321,21 @@ mod tests {
 
     #[test]
     fn test_args_for_patterns() {
-        let raw = basic_setup();
+        let (raw, start, end) = (raw_args(), 1, 6);
         let pargs = raw.args_for(&["-p", "--pattern"]).unwrap();
-        assert_eq!(&raw[1..6],  pargs);
+        assert_eq!(subvec(raw, start, end),  pargs);
     }
 
     #[test]
     fn test_args_for_files() {
-        let raw = basic_setup();
+        let (raw, start, end) = (raw_args(), 6, 9);
         let fargs = raw.args_for(&["-f", "--files"]).unwrap();
-        assert_eq!(&raw[6..9],  fargs);
+        assert_eq!(subvec(raw, start, end),  fargs);
     }
 
     #[test]
     fn test_args_for_bogus_flag() {
-        let raw = basic_setup();
+        let raw = raw_args();
         let no_args = raw.args_for(&["-s", "--some-bogus-flag"]);
         assert_eq!(None,  no_args);
     }
