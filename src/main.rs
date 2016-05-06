@@ -5,8 +5,6 @@ extern crate regex;
 extern crate term;
 
 use regex::Regex;
-use std::path::Path; // FIXME: This is an evil HAX since at this level the
-                     //        code shouldn't have to know about Paths.
 
 pub mod bare;
 
@@ -16,14 +14,8 @@ fn main() {
     let mut log = bare::log::RainbowLog::new();
     let args = bare::cli::Args::parse();
 
-    // FIXME: The mismatch between args.file_paths and
-    //          the 0th arg to bare::propose_renames.
-    let paths: Vec<&Path> = args.file_paths.iter()
-        .map(|p| p.as_path())
-        .collect();
-
     let (proposal, files_not_found) =
-        bare::propose_renames(&paths, &args.patterns);
+        bare::propose_renames(&args.file_paths, &args.patterns);
 
     for file in files_not_found.iter() {
         log.warn(&format!("Not found, skipping {:?}\n", file));

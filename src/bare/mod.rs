@@ -6,7 +6,7 @@ pub mod log;
 
 use regex::Regex;
 use std::collections::HashMap;
-use std::path::{Path,PathBuf};
+use std::path::PathBuf;
 
 /// A Pattern object is a `(regex, replacement)` tuple.
 /// The regex is used to match against files, and
@@ -21,7 +21,8 @@ pub type Rename = (String, String);
 /// mapping a parent dir to multiple src -> dst renames.
 pub type Proposal = HashMap<PathBuf, Vec<Rename>>;
 
-pub fn propose_renames(paths: &[&Path], patterns: &[Pattern])
+
+pub fn propose_renames(paths: &[PathBuf], patterns: &[Pattern])
                        -> (Proposal, Vec<PathBuf>) {
     let (mut proposal, mut files_not_found) = (HashMap::new(), vec![]);
     for src_path in paths.iter() {
@@ -55,7 +56,7 @@ mod tests {
     use std::collections::HashMap;
     use std::fs;
     use std::fs::File;
-    use std::path::{Path, PathBuf};
+    use std::path::PathBuf;
 
     #[test]
     fn propose_renames_basic() {
@@ -84,23 +85,23 @@ mod tests {
             bare::propose_renames(&paths, &patterns);
         assert_eq!(proposal, HashMap::new());
         assert_eq!(files_not_found, vec![
-            Path::new("/tmp/bare_test/shooshoo.bar"),
-            Path::new("/tmp/bare_test/foo-bar.qux"),
-            Path::new("/tmp/bare_test/_(grault).qux"),
+            PathBuf::from("/tmp/bare_test/shooshoo.bar"),
+            PathBuf::from("/tmp/bare_test/foo-bar.qux"),
+            PathBuf::from("/tmp/bare_test/_(grault).qux"),
         ]);
     }
 
     #[cfg(unix)]
-    fn paths<'l>() -> Vec<&'l Path> {
+    fn paths() -> Vec<PathBuf> {
         vec![
-            Path::new("/tmp/bare_test/shooshoo.bar"),
-            Path::new("/tmp/bare_test/foo-bar.qux"),
-            Path::new("/tmp/bare_test/_(grault).qux"),
+            PathBuf::from("/tmp/bare_test/shooshoo.bar"),
+            PathBuf::from("/tmp/bare_test/foo-bar.qux"),
+            PathBuf::from("/tmp/bare_test/_(grault).qux"),
         ]
     }
 
     #[cfg(windows)]
-    fn paths<'l>() -> Vec<&'l Path> {
+    fn paths() -> Vec<PathBuf> {
         vec![
             // TODO:
         ]
@@ -123,7 +124,7 @@ mod tests {
         String::from(literal)
     }
 
-    fn ensure_exist(paths: &[&Path]) {
+    fn ensure_exist(paths: &[PathBuf]) {
         for path in paths {
             if path.exists() {  continue;  }
             if let Some(parent) = path.parent() {
@@ -135,7 +136,7 @@ mod tests {
         }
     }
 
-    fn ensure_dont_exist(paths: &[&Path]) {
+    fn ensure_dont_exist(paths: &[PathBuf]) {
         for path in paths {
             if path.exists() {
                 if path.is_file() {
