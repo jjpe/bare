@@ -12,21 +12,48 @@ const DEFAULT_ANSWER: &'static str = "";
 
 fn main() {
     let mut log = bare::log::RainbowLog::new();
+
+    macro_rules! error {
+        ($fmtstr:expr $(, $x:expr )* ) => { {
+            log.error(&format!($fmtstr, $($x),*));
+        } };
+    }
+
+    macro_rules! warn {
+        ($fmtstr:expr $(, $x:expr )* ) => { {
+            log.warn(&format!($fmtstr, $($x),*));
+        } };
+    }
+
+    macro_rules! info {
+        ($fmtstr:expr $(, $x:expr )* ) => { {
+            log.info(&format!($fmtstr, $($x),*));
+        } };
+    }
+
+    macro_rules! debug {
+        ($fmtstr:expr $(, $x:expr )* ) => { {
+            log.debug(&format!($fmtstr, $($x),*));
+        } };
+    }
+
+
+
     let args = bare::cli::Args::parse();
 
     let (proposal, files_not_found) =
         bare::propose_renames(&args.file_paths, &args.patterns);
 
     for file in files_not_found.iter() {
-        log.warn(&format!("Not found, skipping {:?}\n", file));
+        warn!("Not found, skipping {:?}\n", file);
     }
     for (parent, renames) in proposal.iter() {
-        log.info(&format!("{:?}:\n", parent));
+        info!("{:?}:\n", parent);
         for &(ref src, ref dst) in renames.iter() {
             if src != dst {
-                log.info(&format!("    {:?}    =>    {:?}\n", src, dst));
+                info!("    {:?}    =>    {:?}\n", src, dst);
             } else {
-                log.warn(&format!("    No matches for {:?}\n", src));
+                warn!("    No matches for {:?}\n", src);
             }
         }
     }
@@ -44,15 +71,14 @@ fn main() {
                     let src = parent.join(src_name);
                     let dst = parent.join(dst_name);
                     if let Err(e) = std::fs::rename(&src, &dst) {
-                        log.error(&format!("Couldn't rename {:?}: {:?}\n",
-                                           src, e));
+                        error!("Couldn't rename {:?}: {:?}\n", src, e);
                     }
                 }
             }
-            log.info("Done.\n");
+            info!("Done.\n");
         },
         "n"|"no"|DEFAULT_ANSWER => log.info("Aborted.\n"),
-        ans => log.warn(&format!("Don't know what to do with '{:?}'", ans)),
+        ans => warn!("Don't know what to do with '{:?}'", ans),
     }
     bare::exit::quit();
 }
