@@ -8,9 +8,10 @@ use bare::exit;
 use bare::exit::ExitCode;
 use regex;
 use regex::Regex;
+use std::env;
 use std::io;
 use std::io::{Write};
-use std::path::Path;
+use std::path::PathBuf;
 use term::color;
 
 trait RegexUtils {
@@ -38,21 +39,21 @@ impl RegexUtils for Result<Regex, regex::Error> {
 
 
 
-trait ArgsFor<'a> {
-    fn args_for<'l>(&'a self, aliases: &'l [&'l str]) -> Option<&'a Self>;
+trait ArgsFor {
+    fn args_for(&self, aliases: &[&str]) -> Option<Vec<String>>;
 }
 
-impl<'a> ArgsFor<'a> for [&'a str] {
-    fn args_for<'l>(&'a self, aliases: &'l [&'l str]) -> Option<&'a Self> {
-        for (idx, arg) in self.iter().enumerate() {
-            if aliases.contains(arg) {
-                let start = idx + 1;
-                for (offset, a) in self[start..].iter().enumerate() {
-                    if a.starts_with("-") {
-                        return Some(&self[start - 1  .. start + offset]);
+impl ArgsFor for [String] {
+    fn args_for(&self, aliases: &[&str]) -> Option<Vec<String>> {
+        let is_next_flag_alias = |arg: &str| arg.starts_with("-");
+        for (idx, alias_arg) in self.iter().enumerate() {
+            if aliases.contains(&alias_arg.as_str()) {
+                for (offset, arg) in self[idx + 1 ..].iter().enumerate() {
+                    if is_next_flag_alias(arg) {
+                        return Some(self[idx .. idx + 1 + offset].to_owned());
                     }
                 }
-                return Some(&self[start - 1 .. self.len()]);
+                return Some(self[idx .. self.len()].to_owned());
             }
         }
         None
@@ -61,25 +62,26 @@ impl<'a> ArgsFor<'a> for [&'a str] {
 
 
 
-
 #[derive(Debug)]
-pub struct Args<'a> {
-    pub file_paths:   Vec<&'a Path>,
+pub struct Args {
+    raw:              Vec<String>,
+    pub file_paths:   Vec<PathBuf>,
     pub patterns:     Vec<Pattern>,
     pub dry_run:      bool,
 }
 
-impl<'a> Args<'a> {
+impl Args {
     fn new() -> Self {
         Args {
+            raw: env::args().collect(),
             file_paths: vec![],
             patterns:   vec![],
             dry_run:    false,
         }
     }
 
-    fn parse_help(self, raw: &[&str], aliases: &[&str]) -> Self {
-        if raw.args_for(aliases).is_some() {
+    fn parse_help(self, aliases: &[&str]) -> Self {
+        if self.raw.args_for(aliases).is_some() {
             HelpWriter::new()
                 .text(
 "BARE is the ultimate BAtch REnaming tool. It works by matching regexes
@@ -103,13 +105,13 @@ against file names, and applying them in the order they were provided.\nSee ")
         self
     }
 
-    fn parse_dry_run(mut self, raw: &[&str], aliases: &[&str]) -> Self {
-        self.dry_run = raw.args_for(aliases).is_some();
+    fn parse_dry_run(mut self, aliases: &[&str]) -> Self {
+        self.dry_run = self.raw.args_for(aliases).is_some();
         self
     }
 
-    fn parse_version(self, raw: &[&str], aliases: &[&str]) -> Self {
-        if raw.args_for(aliases).is_some() {
+    fn parse_version(self, aliases: &[&str]) -> Self {
+        if self.raw.args_for(aliases).is_some() {
             HelpWriter::new()
                 .text("bare ")
                 .colored("v", color::BRIGHT_YELLOW)
@@ -120,24 +122,24 @@ against file names, and applying them in the order they were provided.\nSee ")
         self
     }
 
-    fn parse_files(mut self, raw: &'a [&'a str], aliases: &[&str]) -> Self {
-        match raw.args_for(aliases) {
+    fn parse_files(mut self, aliases: &[&str]) -> Self {
+        match self.raw.args_for(aliases) {
             None => exit::abort(ExitCode::MissingRequiredCliArgument(
                 format!("{:?}", aliases))),
             Some(args) => {
-                if args.len() == 1 && aliases.contains(&args[0]) {
+                if args.len() == 1 && aliases.contains(&args[0].as_str()) {
                     exit::abort(ExitCode::NotEnoughFiles);
                 }
                 for file in &args[1..] { // Slice off the alias
-                    self.file_paths.push(Path::new(file));
+                    self.file_paths.push(PathBuf::from(file));
                 }
             },
         };
         self
     }
 
-    fn validate_patterns(raw_patterns: &[&str], aliases: &[&str]) {
-        if !aliases.contains(&raw_patterns[0]) {
+    fn validate_patterns(raw_patterns: &[String], aliases: &[&str]) {
+        if !aliases.contains(&raw_patterns[0].as_str()) {
             // TODO: Error: wrong format somehow
         }
         let patterns = &raw_patterns[1..];
@@ -152,8 +154,8 @@ against file names, and applying them in the order they were provided.\nSee ")
         }
     }
 
-    fn parse_patterns(mut self, raw: &'a [&'a str], aliases: &[&str]) -> Self {
-        match raw.args_for(&aliases) {
+    fn parse_patterns(mut self, aliases: &[&str]) -> Self {
+        match self.raw.args_for(&aliases) {
             None => exit::abort(ExitCode::MissingRequiredCliArgument(
                 format!("{:?}", aliases))),
             Some(patterns) => {
@@ -163,14 +165,13 @@ against file names, and applying them in the order they were provided.\nSee ")
                 while idx < patterns.len() {
                     // Since the regexes are not used concurrently,
                     // the names won't clash with each other.
-                    let result = Regex::new(patterns[idx])
+                    let result = Regex::new(&patterns[idx])
                         .case_insensitive()
                         .named("regex");
                     match result {
                         Ok(regex) => {
-                            let replacement = patterns[idx + 1];
-                            let pattern = (regex, replacement.to_string());
-                            self.patterns.push(pattern);
+                            let replacement = patterns[idx + 1].to_string();
+                            self.patterns.push( (regex, replacement) );
                             idx += 2;
                         },
                         Err(e) => {
@@ -184,13 +185,13 @@ against file names, and applying them in the order they were provided.\nSee ")
         self
     }
 
-    pub fn parse(raw_args: &'a [&'a str]) -> Self {
+    pub fn parse() -> Self {
         Args::new()
-            .parse_help(raw_args,     &["-h", "--help"])
-            .parse_dry_run(raw_args,  &["-d", "--dry-run"])
-            .parse_version(raw_args,  &["-v", "--version"])
-            .parse_files(raw_args,    &["-f", "--files"])
-            .parse_patterns(raw_args, &["-p", "--pattern"])
+            .parse_help(    &["-h", "--help"])
+            .parse_dry_run( &["-d", "--dry-run"])
+            .parse_version( &["-v", "--version"])
+            .parse_files(   &["-f", "--files"])
+            .parse_patterns(&["-p", "--pattern"])
     }
 }
 
