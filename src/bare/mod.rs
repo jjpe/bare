@@ -17,9 +17,8 @@ pub type Pattern = (Regex, String);
 /// where `src` and `dst` represent file names.
 pub type Rename = (String, String);
 
-///
-///
-// [PathBuf](https://doc.rust-lang.org/std/path/struct.PathBuf.html)
+/// A rename proposal is a `HashMap<PathBuf, Vec<Rename>>`,
+/// mapping a parent dir to multiple src -> dst renames.
 pub type Proposal = HashMap<PathBuf, Vec<Rename>>;
 
 pub fn propose_renames(paths: &[&Path], patterns: &[Pattern])
