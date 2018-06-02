@@ -35,7 +35,9 @@ pub fn propose_renames(paths: &[PathBuf], patterns: &[Pattern])
         let mut dst_name = src_name.clone();
         for &(ref regex, ref replacement) in patterns.iter() {
             if regex.is_match(&dst_name) {
-                dst_name = regex.replace_all(&dst_name, replacement.as_str());
+                dst_name = regex
+                    .replace_all(&dst_name, replacement.as_str())
+                    .to_string();
             }
         }
         let parent = src_path.parent().unwrap().to_path_buf();

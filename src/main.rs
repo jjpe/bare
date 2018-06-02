@@ -1,6 +1,6 @@
 //! Batch Renaming tool.
 //!
-//! Copyright @ 2016 Joey Ezechiels
+//! Copyright @ 2016-2018 Joey Ezechiels
 extern crate regex;
 extern crate term;
 
@@ -12,21 +12,25 @@ const DEFAULT_ANSWER: &'static str = "";
 
 fn main() {
     let mut log = bare::log::RainbowLog::new();
+    #[allow(unused)]
     macro_rules! error {
         ($fmtstr:expr $(, $x:expr)*) => {
             log.error(&format!($fmtstr, $($x),*));
         };
     }
+    #[allow(unused)]
     macro_rules! warn {
         ($fmtstr:expr $(, $x:expr)*) => {
             log.warn(&format!($fmtstr, $($x),*));
         };
     }
+    #[allow(unused)]
     macro_rules! info {
         ($fmtstr:expr $(, $x:expr)*) => {
             log.info(&format!($fmtstr, $($x),*));
         };
     }
+    #[allow(unused)]
     macro_rules! debug {
         ($fmtstr:expr $(, $x:expr)*) => {
             log.debug(&format!($fmtstr, $($x),*));
