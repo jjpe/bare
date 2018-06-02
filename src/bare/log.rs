@@ -10,7 +10,9 @@ pub struct Writer {
 }
 
 impl Writer {
-    pub fn new() -> Self { Writer { term: term::stdout().unwrap() } }
+    pub fn new() -> Self {
+        Writer { term: term::stdout().unwrap(/* Option */) }
+    }
 
     pub fn write(&mut self, text: &str) -> io::Result<usize> {
         self.term.write(text.as_bytes())
@@ -22,21 +24,19 @@ impl Writer {
         r
     }
 
-    pub fn write_color(&mut self,
-                       text: &str,
-                       color: Color) -> io::Result<usize> {
-        self.term.fg(color).unwrap();
+    pub fn write_color(&mut self, text: &str, color: Color)
+                       -> io::Result<usize> {
+        self.term.fg(color).unwrap(/* term::Error */);
         let r = self.write(text);
-        self.term.reset().unwrap();
+        self.term.reset().unwrap(/* term::Error */);;
         r
     }
 
-    pub fn writeln_color(&mut self,
-                         text: &str,
-                         color: Color) -> io::Result<usize> {
-        self.term.fg(color).unwrap();
+    pub fn writeln_color(&mut self, text: &str, color: Color)
+                         -> io::Result<usize> {
+        self.term.fg(color).unwrap(/* term::Error */);;
         let r = self.write(&format!("{}\n", text));
-        self.term.reset().unwrap();
+        self.term.reset().unwrap(/* term::Error */);;
         r
     }
 }
