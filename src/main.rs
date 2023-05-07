@@ -1,8 +1,6 @@
 //! Batch Renaming tool.
 //!
 //! Copyright @ 2016-2018 Joey Ezechiels
-extern crate regex;
-extern crate term;
 
 use regex::Regex;
 
