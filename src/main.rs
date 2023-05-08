@@ -1,6 +1,6 @@
 //! Batch Renaming tool.
 //!
-//! Copyright @ 2016-2018 Joey Ezechiels
+//! Copyright @ 2016-2022 Joey Ezechiels
 
 use crate::bare::{
     cli::{self, CliArgs, TypedCliArgs},
