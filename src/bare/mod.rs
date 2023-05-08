@@ -60,13 +60,12 @@ pub(crate) fn propose_renames(args: &TypedCliArgs) -> (Proposal, Vec<PathBuf>) {
 
 #[cfg(test)]
 mod tests {
-    use crate::bare::{self, cli::TypedCliArgs};
+    use crate::bare::{self, cli::TypedCliArgs, Pattern};
     use regex::Regex;
     use std::collections::HashMap;
     use std::fs;
     use std::fs::File;
     use std::path::PathBuf;
-    use super::Pattern;
 
     #[test]
     fn propose_renames_basic() {
