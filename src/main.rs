@@ -36,8 +36,10 @@ fn main() {
     }
 
     let args = bare::cli::Args::parse();
-    let (proposal, files_not_found) =
-        bare::propose_renames(&args.file_paths, &args.patterns);
+    let (proposal, files_not_found) = bare::propose_renames(
+        &args.file_paths,
+        &args.patterns
+    );
 
     for file in files_not_found.iter() {
         warn!("Not found, skipping {:?}\n", file);
@@ -55,13 +57,13 @@ fn main() {
     }
 
     if args.dry_run {
-        return
+        return;
     }
 
     let validator = Regex::new(r"^(?i)(y|n|yes|no)?\n$").unwrap();
     let answer = bare::cli::ask_user("Accord the changes? [y/N] ", &validator);
     match answer.to_lowercase().trim() {
-        "y"|"yes" => {
+        "y" | "yes" => {
             for (parent, renames) in proposal.iter() {
                 for &(ref src_name, ref dst_name) in renames.iter() {
                     let src = parent.join(src_name);
@@ -72,8 +74,8 @@ fn main() {
                 }
             }
             info!("Done.\n");
-        },
-        "n"|"no"|DEFAULT_ANSWER => log.info("Aborted.\n"),
+        }
+        "n" | "no" | DEFAULT_ANSWER => log.info("Aborted.\n"),
         ans => warn!("Don't know what to do with '{:?}'\n", ans),
     }
     bare::exit::quit();

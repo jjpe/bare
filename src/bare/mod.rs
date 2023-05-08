@@ -21,17 +21,17 @@ pub type Rename = (String, String);
 /// mapping a parent dir to multiple src -> dst renames.
 pub type Proposal = HashMap<PathBuf, Vec<Rename>>;
 
-
-pub fn propose_renames(paths: &[PathBuf], patterns: &[Pattern])
-                       -> (Proposal, Vec<PathBuf>) {
+pub fn propose_renames(
+    paths: &[PathBuf],
+    patterns: &[Pattern]
+) -> (Proposal, Vec<PathBuf>) {
     let (mut proposal, mut files_not_found) = (HashMap::new(), vec![]);
     for src_path in paths.iter() {
         if !src_path.exists() {
             files_not_found.push(src_path.to_path_buf());
-            continue
+            continue;
         }
-        let src_name = src_path.file_name().unwrap()
-            .to_str().unwrap().to_string();
+        let src_name = src_path.file_name().unwrap().to_str().unwrap().to_string();
         let mut dst_name = src_name.clone();
         for &(ref regex, ref replacement) in patterns.iter() {
             if regex.is_match(&dst_name) {
@@ -42,18 +42,15 @@ pub fn propose_renames(paths: &[PathBuf], patterns: &[Pattern])
         }
         let parent = src_path.parent().unwrap().to_path_buf();
         let mut renames = proposal.get(&parent).unwrap_or(&vec![]).clone();
-        renames.push( (src_name, dst_name) );
+        renames.push((src_name, dst_name));
         proposal.insert(parent, renames);
     }
     (proposal, files_not_found)
 }
 
-
-
-
 #[cfg(test)]
 mod tests {
-    use bare;
+    use crate::bare;
     use regex::Regex;
     use std::collections::HashMap;
     use std::fs;
@@ -64,16 +61,18 @@ mod tests {
     fn propose_renames_basic() {
         let (paths, patterns) = (paths(), patterns());
         ensure_exist(&paths);
-        let (proposal, files_not_found) =
-            bare::propose_renames(&paths, &patterns);
+        let (proposal, files_not_found) = bare::propose_renames(&paths, &patterns);
         assert_eq!(files_not_found, vec![] as Vec<PathBuf>);
         assert_eq!(proposal, {
             let mut m = HashMap::new();
-            m.insert(PathBuf::from("/tmp/bare_test/"), vec![
-                ("shooshoo.bar".to_string(),    "booboo.bar".to_string()),
-                ("foo-bar.qux".to_string(),     "foo.coconut.qux".to_string()),
-                ("_(grault).qux".to_string(),   ".grault.qux".to_string()),
-            ]);
+            m.insert(
+                PathBuf::from("/tmp/bare_test/"),
+                vec![
+                    ("shooshoo.bar".to_string(), "booboo.bar".to_string()),
+                    ("foo-bar.qux".to_string(), "foo.coconut.qux".to_string()),
+                    ("_(grault).qux".to_string(), ".grault.qux".to_string()),
+                ],
+            );
             m
         });
     }
@@ -83,14 +82,16 @@ mod tests {
         let paths = paths();
         ensure_dont_exist(&paths);
         let patterns = vec![(regex(r"UNMATCHED_PATTERN"), replacement("PAT"))];
-        let (proposal, files_not_found) =
-            bare::propose_renames(&paths, &patterns);
+        let (proposal, files_not_found) = bare::propose_renames(&paths, &patterns);
         assert_eq!(proposal, HashMap::new());
-        assert_eq!(files_not_found, vec![
-            PathBuf::from("/tmp/bare_test/shooshoo.bar"),
-            PathBuf::from("/tmp/bare_test/foo-bar.qux"),
-            PathBuf::from("/tmp/bare_test/_(grault).qux"),
-        ]);
+        assert_eq!(
+            files_not_found,
+            vec![
+                PathBuf::from("/tmp/bare_test/shooshoo.bar"),
+                PathBuf::from("/tmp/bare_test/foo-bar.qux"),
+                PathBuf::from("/tmp/bare_test/_(grault).qux"),
+            ]
+        );
     }
 
     #[cfg(unix)]
@@ -111,10 +112,10 @@ mod tests {
 
     fn patterns() -> Vec<(Regex, String)> {
         vec![
-            (regex(r"shoo"),          replacement("boo")),
-            (regex(r"(-)bar"),        replacement("_coconut")),
-            (regex(r"\(grault\)"),    replacement("grault")),
-            (regex(r"_"),             replacement(".")),
+            (regex(r"shoo"), replacement("boo")),
+            (regex(r"(-)bar"), replacement("_coconut")),
+            (regex(r"\(grault\)"), replacement("grault")),
+            (regex(r"_"), replacement(".")),
         ]
     }
 
@@ -128,7 +129,9 @@ mod tests {
 
     fn ensure_exist(paths: &[PathBuf]) {
         for path in paths {
-            if path.exists() {  continue;  }
+            if path.exists() {
+                continue;
+            }
             if let Some(parent) = path.parent() {
                 if !parent.exists() {
                     fs::create_dir_all(parent).unwrap();

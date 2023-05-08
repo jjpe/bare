@@ -15,35 +15,35 @@ pub enum ExitCode {
     NotEnoughPatterns(String),
 }
 
-fn exit(exit_code : ExitCode) {
+fn exit(exit_code: ExitCode) {
     io::stdout().flush().unwrap();
     process::exit(match exit_code {
         ExitCode::Ok => 0,
         ExitCode::MalformedPattern(ref patterns) => {
             println!("malformed pattern(s): {}", patterns);
             1
-        },
+        }
         ExitCode::MalformedRegex(ref patterns) => {
             println!("malformed regex: {}", patterns);
             2
-        },
+        }
         ExitCode::MissingRequiredCliArgument(ref patterns) => {
             println!("Need to provide one of {}", patterns);
             3
-        },
+        }
         ExitCode::NotEnoughFiles => {
             println!("provide at least 1 file");
             4
-        },
+        }
         ExitCode::NotEnoughPatterns(ref patterns) => {
             println!("not enough pattern(s) in {}", patterns);
             5
-        },
+        }
     });
 }
 
 /// Abnormally exit the program. The `exit_code` value specifies the reason.
-pub fn abort(exit_code : ExitCode) {
+pub fn abort(exit_code: ExitCode) {
     print!("Aborting, ");
     exit(exit_code);
 }

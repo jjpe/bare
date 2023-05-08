@@ -1,9 +1,9 @@
 //! Simple logging module, capable of logging in color.
 use std::io;
 use term;
-use term::StdoutTerminal;
 use term::color;
 use term::color::Color;
+use term::StdoutTerminal;
 
 pub struct Writer {
     term: Box<StdoutTerminal>,
@@ -11,7 +11,9 @@ pub struct Writer {
 
 impl Writer {
     pub fn new() -> Self {
-        Writer { term: term::stdout().unwrap(/* Option */) }
+        Writer {
+            term: term::stdout().unwrap(/* Option */),
+        }
     }
 
     pub fn write(&mut self, text: &str) -> io::Result<usize> {
@@ -24,16 +26,14 @@ impl Writer {
         r
     }
 
-    pub fn write_color(&mut self, text: &str, color: Color)
-                       -> io::Result<usize> {
+    pub fn write_color(&mut self, text: &str, color: Color) -> io::Result<usize> {
         self.term.fg(color).unwrap(/* term::Error */);
         let r = self.write(text);
         self.term.reset().unwrap(/* term::Error */);
         r
     }
 
-    pub fn writeln_color(&mut self, text: &str, color: Color)
-                         -> io::Result<usize> {
+    pub fn writeln_color(&mut self, text: &str, color: Color) -> io::Result<usize> {
         self.term.fg(color).unwrap(/* term::Error */);
         let r = self.write(&format!("{}\n", text));
         self.term.reset().unwrap(/* term::Error */);
@@ -41,15 +41,16 @@ impl Writer {
     }
 }
 
-
-
-
 pub struct RainbowLog {
     writer: Writer,
 }
 
 impl RainbowLog {
-    pub fn new() -> Self { RainbowLog {  writer: Writer::new()  } }
+    pub fn new() -> Self {
+        RainbowLog {
+            writer: Writer::new(),
+        }
+    }
 
     fn log(&mut self, color: Color, tag: &str, message: &str) {
         self.writer.write(&format!("[")).unwrap();
