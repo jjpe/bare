@@ -19,7 +19,6 @@ pub(crate) struct TypedCliArgs {
     pub dry_run: bool,
     pub files: Vec<PathBuf>,
     pub patterns: Vec<Pattern>,
-    pub verbosity: u8,
     pub lower_case: bool,
     pub upper_case: bool,
 }
@@ -48,7 +47,6 @@ impl From<CliArgs> for TypedCliArgs {
                 get_patterns(&args.patterns, &mut patterns);
                 patterns
             },
-            verbosity: args.verbosity,
             lower_case: args.lower_case,
             upper_case: args.upper_case,
         }
@@ -70,10 +68,6 @@ pub(crate) struct CliArgs {
         value_name = "[REGEX] [REPLACEMENT]"
     )]
     pub patterns: Vec<String>,
-
-    /// Sets the level of verbosity
-    #[arg(short, long, action = clap::ArgAction::Count)]
-    pub verbosity: u8,
 
     #[arg(short, long, help = "Rename all files with their lower-case equivalents")]
     pub lower_case: bool,
