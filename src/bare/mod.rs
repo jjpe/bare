@@ -60,7 +60,7 @@ pub(crate) fn propose_renames(args: &TypedCliArgs) -> (Proposal, Vec<PathBuf>) {
 
 #[cfg(test)]
 mod tests {
-    use crate::bare;
+    use crate::bare::{self, cli::TypedCliArgs};
     use regex::Regex;
     use std::collections::HashMap;
     use std::fs;
@@ -70,9 +70,15 @@ mod tests {
 
     #[test]
     fn propose_renames_basic() {
-        let (paths, patterns) = (paths(), patterns());
-        ensure_exist(&paths);
-        let (proposal, files_not_found) = bare::propose_renames(&paths, &patterns);
+        let args = TypedCliArgs {
+            dry_run: false,
+            files: paths(),
+            patterns: patterns(),
+            lower_case: false,
+            upper_case: false,
+        };
+        ensure_exist(&args.files);
+        let (proposal, files_not_found) = bare::propose_renames(&args);
         assert_eq!(files_not_found, vec![] as Vec<PathBuf>);
         assert_eq!(proposal, {
             let mut m = HashMap::new();
@@ -90,13 +96,18 @@ mod tests {
 
     #[test]
     fn propose_renames_nonexisting_file() {
-        let paths = paths();
-        ensure_dont_exist(&paths);
-        let patterns = vec![Pattern {
-            regex: regex(r"UNMATCHED_PATTERN"),
-            replacement: replacement("PAT"),
-        }];
-        let (proposal, files_not_found) = bare::propose_renames(&paths, &patterns);
+        let args = TypedCliArgs {
+            dry_run: false,
+            files: paths(),
+            patterns: vec![Pattern {
+                regex: regex(r"UNMATCHED_PATTERN"),
+                replacement: replacement("PAT"),
+            }],
+            lower_case: false,
+            upper_case: false,
+        };
+        ensure_dont_exist(&args.files);
+        let (proposal, files_not_found) = bare::propose_renames(&args);
         assert_eq!(proposal, HashMap::new());
         assert_eq!(
             files_not_found,
