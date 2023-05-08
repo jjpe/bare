@@ -7,7 +7,6 @@ use crate::bare::{
     error::Result,
     exit,
     log::RainbowLog,
-    propose_renames
 };
 use clap::Parser;
 use regex::Regex;
@@ -44,17 +43,17 @@ fn main() -> Result<()> {
     }
 
     let args: TypedCliArgs = CliArgs::parse().into();
-    let (proposal, not_found) = propose_renames(&args.files, &args.patterns);
+    let (proposal, not_found) = crate::bare::propose_renames(&args);
     for file in not_found.iter() {
         warn!("Not found, skipping {:?}\n", file);
     }
     for (parent, renames) in proposal.iter() {
         info!("{:?}:\n", parent);
-        for &(ref src, ref dst) in renames.iter() {
-            if src != dst {
-                info!("    {:?}    =>    {:?}\n", src, dst);
-            } else {
+        for (src, dst) in renames.iter() {
+            if src == dst {
                 warn!("    No matches for {:?}\n", src);
+            } else {
+                info!("    {:?}    =>    {:?}\n", src, dst);
             }
         }
     }

@@ -6,6 +6,7 @@ pub mod error;
 pub mod exit;
 pub mod log;
 
+use crate::bare::cli::TypedCliArgs;
 use regex::Regex;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -30,12 +31,9 @@ pub type Rename = (String, String);
 /// mapping a parent dir to multiple src -> dst renames.
 pub type Proposal = HashMap<PathBuf, Vec<Rename>>;
 
-pub fn propose_renames(
-    paths: &[PathBuf],
-    patterns: &[Pattern]
-) -> (Proposal, Vec<PathBuf>) {
+pub(crate) fn propose_renames(args: &TypedCliArgs) -> (Proposal, Vec<PathBuf>) {
     let (mut proposal, mut files_not_found) = (HashMap::new(), vec![]);
-    for src_path in paths.iter() {
+    for src_path in args.files.iter() {
         if !src_path.exists() {
             files_not_found.push(src_path.to_path_buf());
             continue;
@@ -45,7 +43,7 @@ pub fn propose_renames(
             .to_str().unwrap(/*Option*/)
             .to_string();
         let mut dst_name = src_name.clone();
-        for Pattern { regex, replacement } in patterns.iter() {
+        for Pattern { regex, replacement } in args.patterns.iter() {
             if regex.is_match(&dst_name) {
                 dst_name = regex
                     .replace_all(&dst_name, replacement.as_str())
