@@ -1,6 +1,7 @@
 //!
 
 use crate::bare::{
+    error::Result,
     log::RainbowLog,
     Pattern,
 };
@@ -96,11 +97,11 @@ impl CliArgs {
 /// Print a question, then wait for user input.
 /// Keep asking the question while the user input fails validation.
 /// Return the answer upon successful validation.
-pub(crate) fn ask_user(question: &str, validator: &Regex) -> String {
+pub(crate) fn ask_user(question: &str, validator: &Regex) -> Result<String> {
     let mut log = RainbowLog::new();
     let mut answer = String::new();
     while !validator.is_match(&answer) {
-        log.info(&format!("{}", question));
+        log.info(&format!("{}", question))?;
         io::stdout().flush().unwrap_or_else(|e| {
             log.error(&format!("Error flushing stdout: {:?}", e)).unwrap()
         });
@@ -109,5 +110,5 @@ pub(crate) fn ask_user(question: &str, validator: &Regex) -> String {
             .read_line(&mut answer)
             .expect("Failed to read input");
     }
-    answer
+    Ok(answer)
 }

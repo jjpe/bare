@@ -62,7 +62,7 @@ fn main() -> Result<()> {
         return Ok(());
     }
     let validator = Regex::new(r"^(?i)(y|n|yes|no)?\n$").unwrap();
-    let answer = cli::ask_user("Accord the changes? [y/N] ", &validator);
+    let answer = cli::ask_user("Accord the changes? [y/N] ", &validator)?;
     match answer.to_lowercase().trim() {
         "y" | "yes" => {
             for (parent, renames) in proposal.iter() {
