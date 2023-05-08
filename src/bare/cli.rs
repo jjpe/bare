@@ -2,15 +2,16 @@
 //! as well as some UI utilities.
 //!
 //! [`Args`]: ./struct.Args.html
-use bare::log;
-use bare::Pattern;
-use bare::exit;
-use bare::exit::ExitCode;
+use crate::bare::{
+    exit::{self, ExitCode},
+    log::{RainbowLog, Writer},
+    Pattern
+};
 use regex;
 use regex::Regex;
 use std::env;
 use std::io;
-use std::io::{Write};
+use std::io::Write;
 use std::path::PathBuf;
 use term::color;
 
@@ -199,11 +200,11 @@ against file names, and applying them in the order they were provided.\nSee ")
 
 
 struct HelpWriter {
-    writer: log::Writer
+    writer: Writer
 }
 
 impl HelpWriter {
-    pub fn new() -> Self { HelpWriter {  writer: log::Writer::new()  } }
+    pub fn new() -> Self { HelpWriter {  writer: Writer::new()  } }
 
     pub fn category(mut self, cat: &str) -> Self {
         self.writer.writeln_color(cat, color::YELLOW).unwrap();
@@ -245,7 +246,7 @@ impl HelpWriter {
 /// Keep asking the question while the user input fails validation.
 /// Return the answer upon successful validation.
 pub fn ask_user(question: &str, validator: &Regex) -> String {
-    let mut log = log::RainbowLog::new();
+    let mut log = RainbowLog::new();
     let mut answer = String::new();
     while !validator.is_match(&answer) {
         log.info(&format!("{}", question));
@@ -263,7 +264,7 @@ pub fn ask_user(question: &str, validator: &Regex) -> String {
 
 #[cfg(test)]
 mod tests {
-    use bare::cli::ArgsFor;
+    use crate::bare::cli::ArgsFor;
 
     fn raw_args() -> Vec<String> {
         to_string_vec(&vec![
