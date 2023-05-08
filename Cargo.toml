@@ -10,8 +10,10 @@ repository = "https://github.com/jjpe/bare.git"
 edition = "2021"
 
 [dependencies]
+ioe = "0.5.1"
 regex = "1.8.1"
 term = "0.7.0"
+thiserror = "1.0.40"
 
 [dependencies.clap]
 version = "4.0.29"
