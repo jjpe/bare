@@ -10,6 +10,7 @@ repository = "https://github.com/jjpe/bare.git"
 edition = "2021"
 
 [dependencies]
+displaydoc = "0.2.4"
 ioe = "0.5.1"
 regex = "1.8.1"
 term = "0.7.0"

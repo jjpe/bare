@@ -2,8 +2,9 @@
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error, displaydoc::Display)]
 pub enum Error {
+    /// I/O error: {0}
     IoError(ioe::IoError),
 }
 
