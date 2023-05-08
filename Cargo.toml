@@ -4,6 +4,8 @@ version = "2.1.0"
 authors = ["Joey Ezechiëls <joey.ezechiels@gmail.com>"]
 license = "GPL-3.0"
 description = "A CLI tool to batch rename files based on a series of <PATTERN> <REPLACEMENT> tuples."
+documentation = "https://docs.rs/bare"
+homepage = "https://github.com/jjpe/bare"
 repository = "https://github.com/jjpe/bare.git"
 edition = "2021"
 
