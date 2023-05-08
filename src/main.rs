@@ -2,6 +2,13 @@
 //!
 //! Copyright @ 2016-2018 Joey Ezechiels
 
+use crate::bare::{
+    cli::{self, CliArgs, TypedCliArgs},
+    exit,
+    log::RainbowLog,
+    propose_renames
+};
+use clap::Parser;
 use regex::Regex;
 
 pub mod bare;
@@ -9,7 +16,7 @@ pub mod bare;
 const DEFAULT_ANSWER: &'static str = "";
 
 fn main() {
-    let mut log = bare::log::RainbowLog::new();
+    let mut log = RainbowLog::new();
     #[allow(unused)]
     macro_rules! error {
         ($fmt:expr $(, $arg:expr)*) => {
@@ -35,16 +42,11 @@ fn main() {
         };
     }
 
-    let args = bare::cli::Args::parse();
-    let (proposal, files_not_found) = bare::propose_renames(
-        &args.file_paths,
-        &args.patterns
-    );
-
-    for file in files_not_found.iter() {
+    let args: TypedCliArgs = CliArgs::parse().into();
+    let (proposal, not_found) = propose_renames(&args.files, &args.patterns);
+    for file in not_found.iter() {
         warn!("Not found, skipping {:?}\n", file);
     }
-
     for (parent, renames) in proposal.iter() {
         info!("{:?}:\n", parent);
         for &(ref src, ref dst) in renames.iter() {
@@ -55,13 +57,11 @@ fn main() {
             }
         }
     }
-
     if args.dry_run {
         return;
     }
-
     let validator = Regex::new(r"^(?i)(y|n|yes|no)?\n$").unwrap();
-    let answer = bare::cli::ask_user("Accord the changes? [y/N] ", &validator);
+    let answer = cli::ask_user("Accord the changes? [y/N] ", &validator);
     match answer.to_lowercase().trim() {
         "y" | "yes" => {
             for (parent, renames) in proposal.iter() {
@@ -78,7 +78,5 @@ fn main() {
         "n" | "no" | DEFAULT_ANSWER => log.info("Aborted.\n"),
         ans => warn!("Don't know what to do with '{:?}'\n", ans),
     }
-    bare::exit::quit();
+    exit::quit();
 }
-
-//  LocalWords:  filename PathBuf ExitCode

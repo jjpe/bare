@@ -8,10 +8,18 @@ use regex::Regex;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+
+#[derive(Debug, Clone, clap::Parser)]
 /// A Pattern object is a `(regex, replacement)` tuple.
 /// The regex is used to match against files, and
 /// replacement is the replacement text.
-pub type Pattern = (Regex, String);
+pub struct Pattern {
+    #[arg(required = true)]
+    pub(crate) regex: Regex,
+    #[arg(required = true)]
+    pub(crate) replacement: String,
+}
+
 
 /// A Rename object is a `(src, dst)` tuple,
 /// where `src` and `dst` represent file names.
@@ -33,7 +41,7 @@ pub fn propose_renames(
         }
         let src_name = src_path.file_name().unwrap().to_str().unwrap().to_string();
         let mut dst_name = src_name.clone();
-        for &(ref regex, ref replacement) in patterns.iter() {
+        for Pattern { regex, replacement } in patterns.iter() {
             if regex.is_match(&dst_name) {
                 dst_name = regex
                     .replace_all(&dst_name, replacement.as_str())
@@ -56,6 +64,7 @@ mod tests {
     use std::fs;
     use std::fs::File;
     use std::path::PathBuf;
+    use super::Pattern;
 
     #[test]
     fn propose_renames_basic() {
@@ -81,7 +90,10 @@ mod tests {
     fn propose_renames_nonexisting_file() {
         let paths = paths();
         ensure_dont_exist(&paths);
-        let patterns = vec![(regex(r"UNMATCHED_PATTERN"), replacement("PAT"))];
+        let patterns = vec![Pattern {
+            regex: regex(r"UNMATCHED_PATTERN"),
+            replacement: replacement("PAT"),
+        }];
         let (proposal, files_not_found) = bare::propose_renames(&paths, &patterns);
         assert_eq!(proposal, HashMap::new());
         assert_eq!(
@@ -110,12 +122,24 @@ mod tests {
         ]
     }
 
-    fn patterns() -> Vec<(Regex, String)> {
+    fn patterns() -> Vec<Pattern> {
         vec![
-            (regex(r"shoo"), replacement("boo")),
-            (regex(r"(-)bar"), replacement("_coconut")),
-            (regex(r"\(grault\)"), replacement("grault")),
-            (regex(r"_"), replacement(".")),
+            Pattern {
+                regex: regex(r"shoo"),
+                replacement: replacement("boo")
+            },
+            Pattern {
+                regex: regex(r"(-)bar"),
+                replacement: replacement("_coconut")
+            },
+            Pattern {
+                regex: regex(r"\(grault\)"),
+                replacement: replacement("grault")
+            },
+            Pattern {
+                regex: regex(r"_"),
+                replacement: replacement(".")
+            },
         ]
     }
 
