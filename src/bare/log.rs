@@ -22,21 +22,21 @@ impl Writer {
 
     pub fn writeln(&mut self, text: &str) -> io::Result<usize> {
         let r = self.write(text);
-        self.write("\n").unwrap();
+        self.write("\n")?;
         r
     }
 
     pub fn write_color(&mut self, text: &str, color: Color) -> io::Result<usize> {
-        self.term.fg(color).unwrap(/* term::Error */);
+        self.term.fg(color)?;
         let r = self.write(text);
-        self.term.reset().unwrap(/* term::Error */);
+        self.term.reset()?;
         r
     }
 
     pub fn writeln_color(&mut self, text: &str, color: Color) -> io::Result<usize> {
-        self.term.fg(color).unwrap(/* term::Error */);
+        self.term.fg(color)?;
         let r = self.write(&format!("{}\n", text));
-        self.term.reset().unwrap(/* term::Error */);
+        self.term.reset()?;
         r
     }
 }
@@ -52,27 +52,28 @@ impl RainbowLog {
         }
     }
 
-    fn log(&mut self, color: Color, tag: &str, message: &str) {
-        self.writer.write(&format!("[")).unwrap();
-        self.writer.term.fg(color).unwrap();
-        self.writer.write(&format!("{}", tag)).unwrap();
-        self.writer.term.reset().unwrap();
-        self.writer.write(&format!("] {}", message)).unwrap();
+    fn log(&mut self, color: Color, tag: &str, message: &str) -> io::Result<()> {
+        self.writer.write(&format!("["))?;
+        self.writer.term.fg(color)?;
+        self.writer.write(&format!("{}", tag))?;
+        self.writer.term.reset()?;
+        self.writer.write(&format!("] {}", message))?;
+        Ok(())
     }
 
-    pub fn error(&mut self, message: &str) {
-        self.log(color::RED, "E", message);
+    pub fn error(&mut self, message: &str) -> io::Result<()> {
+        self.log(color::RED, "E", message)
     }
 
-    pub fn warn(&mut self, message: &str) {
-        self.log(color::YELLOW, "W", message);
+    pub fn warn(&mut self, message: &str) -> io::Result<()> {
+        self.log(color::YELLOW, "W", message)
     }
 
-    pub fn info(&mut self, message: &str) {
-        self.log(color::BRIGHT_GREEN, "I", message);
+    pub fn info(&mut self, message: &str) -> io::Result<()> {
+        self.log(color::BRIGHT_GREEN, "I", message)
     }
 
-    pub fn debug(&mut self, message: &str) {
-        self.log(color::BRIGHT_BLUE, "D", message);
+    pub fn debug(&mut self, message: &str) -> io::Result<()> {
+        self.log(color::BRIGHT_BLUE, "D", message)
     }
 }

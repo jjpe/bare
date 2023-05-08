@@ -101,9 +101,9 @@ pub(crate) fn ask_user(question: &str, validator: &Regex) -> String {
     let mut answer = String::new();
     while !validator.is_match(&answer) {
         log.info(&format!("{}", question));
-        io::stdout()
-            .flush()
-            .unwrap_or_else(|e| log.error(&format!("Error flushing stdout: {:?}", e)));
+        io::stdout().flush().unwrap_or_else(|e| {
+            log.error(&format!("Error flushing stdout: {:?}", e)).unwrap()
+        });
         answer.clear();
         io::stdin()
             .read_line(&mut answer)

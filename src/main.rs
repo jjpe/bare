@@ -4,6 +4,7 @@
 
 use crate::bare::{
     cli::{self, CliArgs, TypedCliArgs},
+    error::Result,
     exit,
     log::RainbowLog,
     propose_renames
@@ -15,30 +16,30 @@ pub mod bare;
 
 const DEFAULT_ANSWER: &'static str = "";
 
-fn main() {
+fn main() -> Result<()> {
     let mut log = RainbowLog::new();
     #[allow(unused)]
     macro_rules! error {
         ($fmt:expr $(, $arg:expr)*) => {
-            log.error(&format!($fmt, $($arg),*))
+            log.error(&format!($fmt, $($arg),*))?
         };
     }
     #[allow(unused)]
     macro_rules! warn {
         ($fmt:expr $(, $arg:expr)*) => {
-            log.warn(&format!($fmt, $($arg),*))
+            log.warn(&format!($fmt, $($arg),*))?
         };
     }
     #[allow(unused)]
     macro_rules! info {
         ($fmt:expr $(, $arg:expr)*) => {
-            log.info(&format!($fmt, $($arg),*))
+            log.info(&format!($fmt, $($arg),*))?
         };
     }
     #[allow(unused)]
     macro_rules! debug {
         ($fmt:expr $(, $arg:expr)*) => {
-            log.debug(&format!($fmt, $($arg),*))
+            log.debug(&format!($fmt, $($arg),*))?
         };
     }
 
@@ -58,7 +59,7 @@ fn main() {
         }
     }
     if args.dry_run {
-        return;
+        return Ok(());
     }
     let validator = Regex::new(r"^(?i)(y|n|yes|no)?\n$").unwrap();
     let answer = cli::ask_user("Accord the changes? [y/N] ", &validator);
@@ -75,8 +76,8 @@ fn main() {
             }
             info!("Done.\n");
         }
-        "n" | "no" | DEFAULT_ANSWER => log.info("Aborted.\n"),
+        "n" | "no" | DEFAULT_ANSWER => info!("Aborted.\n"),
         ans => warn!("Don't know what to do with '{:?}'\n", ans),
     }
-    exit::quit();
+    exit::quit()
 }

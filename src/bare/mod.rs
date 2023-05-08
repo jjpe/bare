@@ -1,13 +1,14 @@
 //! This module provides the core functionality
 //! from the bare utility, in library form.
+
 pub mod cli;
+pub mod error;
 pub mod exit;
 pub mod log;
 
 use regex::Regex;
 use std::collections::HashMap;
 use std::path::PathBuf;
-
 
 #[derive(Debug, Clone, clap::Parser)]
 /// A Pattern object is a `(regex, replacement)` tuple.
@@ -39,7 +40,10 @@ pub fn propose_renames(
             files_not_found.push(src_path.to_path_buf());
             continue;
         }
-        let src_name = src_path.file_name().unwrap().to_str().unwrap().to_string();
+        let src_name = src_path
+            .file_name().unwrap(/*Option*/)
+            .to_str().unwrap(/*Option*/)
+            .to_string();
         let mut dst_name = src_name.clone();
         for Pattern { regex, replacement } in patterns.iter() {
             if regex.is_match(&dst_name) {
@@ -48,7 +52,7 @@ pub fn propose_renames(
                     .to_string();
             }
         }
-        let parent = src_path.parent().unwrap().to_path_buf();
+        let parent = src_path.parent().unwrap(/*Option*/).to_path_buf();
         let mut renames = proposal.get(&parent).unwrap_or(&vec![]).clone();
         renames.push((src_name, dst_name));
         proposal.insert(parent, renames);

@@ -1,5 +1,6 @@
 //! Exiting the program made trivial.
 
+use crate::bare::error::Result;
 use std::io;
 use std::io::Write;
 use std::process;
@@ -15,8 +16,8 @@ pub enum ExitCode {
     NotEnoughPatterns(String),
 }
 
-fn exit(exit_code: ExitCode) {
-    io::stdout().flush().unwrap();
+fn exit(exit_code: ExitCode) -> Result<()> {
+    io::stdout().flush()?;
     process::exit(match exit_code {
         ExitCode::Ok => 0,
         ExitCode::MalformedPattern(ref patterns) => {
@@ -43,12 +44,14 @@ fn exit(exit_code: ExitCode) {
 }
 
 /// Abnormally exit the program. The `exit_code` value specifies the reason.
-pub fn abort(exit_code: ExitCode) {
+pub fn abort(exit_code: ExitCode) -> Result<()> {
     print!("Aborting, ");
-    exit(exit_code);
+    exit(exit_code)?;
+    Ok(())
 }
 
 /// Normally exit the program.
-pub fn quit() {
-    exit(ExitCode::Ok);
+pub fn quit() -> Result<()> {
+    exit(ExitCode::Ok)?;
+    Ok(())
 }
