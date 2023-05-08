@@ -13,25 +13,25 @@ fn main() {
     #[allow(unused)]
     macro_rules! error {
         ($fmtstr:expr $(, $x:expr)*) => {
-            log.error(&format!($fmtstr, $($x),*));
+            log.error(&format!($fmtstr, $($x),*))
         };
     }
     #[allow(unused)]
     macro_rules! warn {
         ($fmtstr:expr $(, $x:expr)*) => {
-            log.warn(&format!($fmtstr, $($x),*));
+            log.warn(&format!($fmtstr, $($x),*))
         };
     }
     #[allow(unused)]
     macro_rules! info {
         ($fmtstr:expr $(, $x:expr)*) => {
-            log.info(&format!($fmtstr, $($x),*));
+            log.info(&format!($fmtstr, $($x),*))
         };
     }
     #[allow(unused)]
     macro_rules! debug {
         ($fmtstr:expr $(, $x:expr)*) => {
-            log.debug(&format!($fmtstr, $($x),*));
+            log.debug(&format!($fmtstr, $($x),*))
         };
     }
 

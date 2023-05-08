@@ -28,15 +28,15 @@ impl Writer {
                        -> io::Result<usize> {
         self.term.fg(color).unwrap(/* term::Error */);
         let r = self.write(text);
-        self.term.reset().unwrap(/* term::Error */);;
+        self.term.reset().unwrap(/* term::Error */);
         r
     }
 
     pub fn writeln_color(&mut self, text: &str, color: Color)
                          -> io::Result<usize> {
-        self.term.fg(color).unwrap(/* term::Error */);;
+        self.term.fg(color).unwrap(/* term::Error */);
         let r = self.write(&format!("{}\n", text));
-        self.term.reset().unwrap(/* term::Error */);;
+        self.term.reset().unwrap(/* term::Error */);
         r
     }
 }
